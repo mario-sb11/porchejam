@@ -11,8 +11,11 @@ La idea surgió inicialmente para trabajar con las playlists de Spotify. Tras de
 La aplicación se estructura en torno a diferentes formas de interactuar con la música:
 
 1. **Jam Session (Modo Principal):** Es el eje central del proyecto. Un motor de juego donde el usuario debe identificar canciones a través de fragmentos de audio de playlists dinámicas. Dentro de este motor se incluyen variantes como:
-    * **Modo Clásico:** Adivinar canción/artista contra reloj.
-    * **Modo Impostor:** Dinámica de deducción social donde varios jugadores reciben la misma información sobre una canción (audio, nombre y artista), excepto 1 (el impostor) que recibirá una pista o nada, este debe fingir que tiene la misma información que el resto sin haberla recibido, los jugadores reales tienen que pillar al impostor.
+    * **Modo Solitario:** Adivinar canción/artista contra reloj, por rondas, supervivencia con vidas, modo reverso...
+    * **Modo Fiesta Local:** El modo fiesta local consiste en un multijugador desde un mismo dispostivo, este modo consta de 3 submodos: Por turnos, El impostor y zumbadores.
+    * **Modo Fiesta Local "Por turnos":** Adivinar canción/artista por rondas, supervivencia, la patata caliente, reversa
+    * **Modo Fiesta Local "Impostor":** Dinámica de deducción social donde varios jugadores reciben la misma información sobre una canción (audio, nombre y artista), excepto 1 (el impostor) que recibirá una pista o nada, este debe fingir que tiene la misma información que el resto sin haberla recibido, los jugadores reales tienen que pillar al impostor.
+    * **Modo Multijugador en línea:** Este modo se encuentra en desarrollo.
 2. **Music Race:** Un reto de lógica y cultura musical. El objetivo es conectar un artista inicial con uno de destino navegando únicamente a través de sus álbumes, colaboraciones y artistas relacionados.
 3. **Buscador y Personalización:** Herramienta para explorar el catálogo global y configurar partidas basadas en gustos específicos.
 4. **Mascota Interactiva (Mapi):** Un componente de UI animado que reacciona a la interacción del usuario. Gestiona estados globales para activar el "Modo Rave", un Easter Egg que transforma la estética y el comportamiento sonoro de la aplicación.
