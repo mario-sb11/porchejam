@@ -86,3 +86,14 @@ describe("sincronización con la cuenta", () => {
     expect(localStorage.getItem("porchejam_cookie_consent")).toBe("accepted");
   });
 });
+
+describe("nombre público", () => {
+  it("acepta nombres normales y rechaza los que la base de datos no admite", async () => {
+    const { isValidUsername } = await import("./cloud");
+    expect(isValidUsername("Mario")).toBe(true);
+    expect(isValidUsername("Peña_23")).toBe(true);
+    expect(isValidUsername("x")).toBe(false);
+    expect(isValidUsername("🎧DJ")).toBe(false);
+    expect(isValidUsername("<script>")).toBe(false);
+  });
+});

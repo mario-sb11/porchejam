@@ -18,6 +18,11 @@ export interface Profile {
   avatar: string;
 }
 
+/** Mismo formato que exige la base de datos (profiles_username_format). */
+export function isValidUsername(name: string): boolean {
+  return /^[A-Za-z0-9_ÁÉÍÓÚáéíóúÑñÜü .-]{2,20}$/.test(name);
+}
+
 function setLocal(key: string, value: string) {
   try {
     localStorage.setItem(key, value);
@@ -70,6 +75,14 @@ export async function syncAfterLogin(user: User): Promise<Profile | null> {
     if (profile && profile.avatar === "default" && localAvatar && localAvatar !== "default") {
       await supabase.from("profiles").update({ avatar: localAvatar }).eq("id", user.id);
       profile.avatar = localAvatar;
+    }
+
+    // El nombre público pasa a ser el que ya usaba como invitado (no el de Google).
+    // Si no cumple el formato o ya lo tiene otro jugador, se queda el asignado.
+    const localName = localStorage.getItem(STORAGE_KEYS.username)?.trim();
+    if (profile && localName && localName !== profile.username && isValidUsername(localName)) {
+      const { error } = await supabase.from("profiles").update({ username: localName }).eq("id", user.id);
+      if (!error) profile.username = localName;
     }
   }
 
