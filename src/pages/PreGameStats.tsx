@@ -6,6 +6,7 @@ import GameButton from "@/components/ui/GameButton";
 import GlassCard from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import type { MatchRecord } from "@/lib/playerStats";
 
 const PreGameStats = () => {
   const navigate = useNavigate();
@@ -21,10 +22,10 @@ const PreGameStats = () => {
   const [globalAccuracy, setGlobalAccuracy] = useState("0%");
   
   const [favoriteMode, setFavoriteMode] = useState("Aún no definido");
-  const [recentMatches, setRecentMatches] = useState<any[]>([]);
+  const [recentMatches, setRecentMatches] = useState<MatchRecord[]>([]);
 
   // Modal de Detalles
-  const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<MatchRecord | null>(null);
 
   useEffect(() => {
     const storedName = localStorage.getItem("porchejam_username");
@@ -38,12 +39,12 @@ const PreGameStats = () => {
     }
 
     // Datos Solitario
-    setHighScore(parseInt(localStorage.getItem("porchify_high_score") || "0").toLocaleString());
-    setSoloGames(localStorage.getItem("porchify_solo_games") || "0");
+    setHighScore(parseInt(localStorage.getItem("porchejam_high_score") || "0").toLocaleString());
+    setSoloGames(localStorage.getItem("porchejam_solo_games") || "0");
     
     // Precisión Solitario (Arreglado el bug del > 100%)
-    const totalC = parseInt(localStorage.getItem("porchify_total_correct") || "0");
-    const totalR = parseInt(localStorage.getItem("porchify_total_rounds") || "0");
+    const totalC = parseInt(localStorage.getItem("porchejam_total_correct") || "0");
+    const totalR = parseInt(localStorage.getItem("porchejam_total_rounds") || "0");
     if (totalR > 0) {
       const safeC = Math.min(totalC, totalR); // Candado para que los aciertos no superen a las rondas
       setGlobalAccuracy(`${Math.round((safeC / totalR) * 100)}% (${safeC}/${totalR})`);
@@ -52,10 +53,10 @@ const PreGameStats = () => {
     }
 
     // Datos Fiesta
-    setPartyGames(localStorage.getItem("porchify_party_games") || "0");
+    setPartyGames(localStorage.getItem("porchejam_party_games") || "0");
 
     // Modo Favorito
-    const modeTallyStr = localStorage.getItem("porchify_mode_tally");
+    const modeTallyStr = localStorage.getItem("porchejam_mode_tally");
     if (modeTallyStr) {
       const tally = JSON.parse(modeTallyStr);
       const favKey = Object.keys(tally).reduce((a, b) => tally[a] > tally[b] ? a : b, "");
@@ -78,7 +79,7 @@ const PreGameStats = () => {
     }
 
     // Historial de Partidas
-    const historyData = localStorage.getItem("porchify_match_history");
+    const historyData = localStorage.getItem("porchejam_match_history");
     if (historyData) {
       setRecentMatches(JSON.parse(historyData));
     }
@@ -383,7 +384,7 @@ const PreGameStats = () => {
                   <div className="space-y-4">
                     <h4 className="text-xs uppercase tracking-widest text-zinc-500 font-bold flex items-center gap-2"><Swords className="w-4 h-4"/> Ranking Final</h4>
                     <div className="space-y-2">
-                      {selectedMatch.topPlayers?.map((p: any, i: number) => (
+                      {selectedMatch.topPlayers?.map((p, i: number) => (
                         <div key={i} className="flex items-center gap-3 bg-white/5 rounded-xl p-2.5">
                           <span className="font-bold text-muted-foreground w-4 text-center text-xs">{i === 0 ? "🥇" : i === 1 ? "🥈" : "🥉"}</span>
                           <span>{p.emoji}</span>

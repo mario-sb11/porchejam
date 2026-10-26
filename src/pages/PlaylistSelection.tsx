@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { apiUrl } from "@/lib/api";
 
 interface Playlist {
   id: string;
@@ -27,7 +28,6 @@ const formatTime = (timeInSeconds: number) => {
   return `0:${seconds < 10 ? '0' : ''}${seconds}`;
 };
 
-const API_BASE_URL = import.meta.env.DEV ? "/api" : "https://porchify-api.onrender.com/api";
 
 const PlaylistSelection = () => {
   const navigate = useNavigate();
@@ -73,7 +73,7 @@ const PlaylistSelection = () => {
     const loadTopPlaylists = async () => {
       setIsSearching(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/top-playlists`);
+        const res = await fetch(apiUrl("top-playlists"));
         if (res.ok) {
           const data = await res.json();
           setTopPlaylists(data);
@@ -110,7 +110,7 @@ const PlaylistSelection = () => {
     setIsSearching(true);
     try {
       const typeParam = activeTab === "artists" ? "artist" : "playlist";
-      const res = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(searchQuery)}&type=${typeParam}`);
+      const res = await fetch(apiUrl("search", { q: searchQuery, type: typeParam }));
       if (res.ok) setSearchResults(await res.json());
     } catch (error) {
       console.error("Error en búsqueda:", error);
@@ -132,7 +132,7 @@ const PlaylistSelection = () => {
     const fetchTracks = async () => {
       setLoadingTracks(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/tracks?id=${previewItem.id}&type=${previewItem.type}`);
+        const res = await fetch(apiUrl("tracks", { id: previewItem.id, type: previewItem.type }));
         if (res.ok) {
           const data = await res.json();
           setPreviewTracks(data.tracks);
@@ -152,7 +152,7 @@ const PlaylistSelection = () => {
     if (!previewItem || nextTrackIndex === null) return;
     setLoadingMoreTracks(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/tracks?id=${previewItem.id}&type=${previewItem.type}&index=${nextTrackIndex}`);
+      const res = await fetch(apiUrl("tracks", { id: previewItem.id, type: previewItem.type, index: nextTrackIndex }));
       if (res.ok) {
         const data = await res.json();
         setPreviewTracks(prev => [...prev, ...data.tracks]);
@@ -214,24 +214,24 @@ const PlaylistSelection = () => {
 
     if (selectedItems.length === 1) {
       // Partida Normal
-      localStorage.setItem("porchify_selected_playlist", selectedItems[0].id);
-      localStorage.setItem("porchify_selected_playlist_name", selectedItems[0].name);
-      localStorage.setItem("porchify_selected_type", selectedItems[0].type);
+      localStorage.setItem("porchejam_selected_playlist", selectedItems[0].id);
+      localStorage.setItem("porchejam_selected_playlist_name", selectedItems[0].name);
+      localStorage.setItem("porchejam_selected_type", selectedItems[0].type);
     } else {
       // MIX-TAPE GLOBAL
       const ids = selectedItems.map(i => i.id).join(",");
       const names = selectedItems.map(i => i.name).join(" + ");
-      localStorage.setItem("porchify_selected_playlist", ids);
-      localStorage.setItem("porchify_selected_playlist_name", `Mix: ${names}`);
-      localStorage.setItem("porchify_selected_type", "mix");
+      localStorage.setItem("porchejam_selected_playlist", ids);
+      localStorage.setItem("porchejam_selected_playlist_name", `Mix: ${names}`);
+      localStorage.setItem("porchejam_selected_type", "mix");
       // Guardamos el objeto entero por si el motor de juego necesita saber qué es artista y qué es lista
-      localStorage.setItem("porchify_mix_items", JSON.stringify(selectedItems)); 
+      localStorage.setItem("porchejam_mix_items", JSON.stringify(selectedItems)); 
     }
     navigate("/modes");
   };
 
   // RENDERIZADOR DE CUADRÍCULAS
-  const renderGrid = (items: Playlist[], emptyMessage: string, title?: string, icon?: any) => {
+  const renderGrid = (items: Playlist[], emptyMessage: string, title?: string, icon?: React.ReactNode) => {
     if (items.length === 0 && !isSearching) {
        return (
          <div className="flex flex-col items-center justify-center py-10 opacity-50">

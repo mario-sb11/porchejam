@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Heart, SkipForward, Gamepad2, Ghost, Lightbulb, Clock, Infinity, Tag, Volume2, Sparkles, MessageSquareQuote } from "lucide-react";
+import { ArrowLeft, Heart, SkipForward, Gamepad2, Ghost, Lightbulb, Clock, Infinity as InfinityIcon, Tag, Volume2, Sparkles, MessageSquareQuote } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -251,7 +251,7 @@ const GameSettings = () => {
                   {IMPOSTER_DEBATE_TIMES.map((t) => (
                     <ChipButton key={t} selected={debateTime === t} onClick={() => setDebateTime(t)} isImposter>
                       {t === 0 ? (
-                        <span className="flex items-center gap-1"><Infinity className="w-4 h-4" /> Sin límite</span>
+                        <span className="flex items-center gap-1"><InfinityIcon className="w-4 h-4" /> Sin límite</span>
                       ) : (
                         <span className="flex items-center gap-1"><Clock className="w-4 h-4" /> {t} min</span>
                       )}

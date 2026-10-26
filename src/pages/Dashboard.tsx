@@ -4,8 +4,8 @@ import { Music2, Radio, Play, Lock, Route, Disc3 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import GlassCard from "@/components/ui/GlassCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { apiUrl } from "@/lib/api";
 
-const API_BASE_URL = import.meta.env.DEV ? "http://localhost:3001/api" : "https://porchify-api.onrender.com/api";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -87,13 +87,13 @@ const Dashboard = () => {
       
       setDiscoTrackName(`Buscando ${randomGenre} en la maleta...`);
 
-      const searchRes = await fetch(`${API_BASE_URL}/search?q=${encodeURIComponent(randomGenre)}&type=playlist`);
+      const searchRes = await fetch(apiUrl("search", { q: randomGenre, type: "playlist" }));
       const searchData = await searchRes.json();
       
       if (searchData && searchData.length > 0) {
         const randomPlaylist = searchData[Math.floor(Math.random() * Math.min(5, searchData.length))];
         
-        const tracksRes = await fetch(`${API_BASE_URL}/tracks?id=${randomPlaylist.id}&type=playlist&index=0`);
+        const tracksRes = await fetch(apiUrl("tracks", { id: randomPlaylist.id, type: "playlist", index: 0 }));
         const tracksData = await tracksRes.json();
         
         if (tracksData.tracks && tracksData.tracks.length > 0) {

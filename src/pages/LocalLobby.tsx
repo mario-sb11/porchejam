@@ -54,8 +54,8 @@ const LocalLobby = () => {
   };
 
   const startParty = () => {
-    localStorage.setItem("porchify_party_players", JSON.stringify(players));
-    localStorage.setItem("porchify_party_mode", partyMode);
+    localStorage.setItem("porchejam_party_players", JSON.stringify(players));
+    localStorage.setItem("porchejam_party_mode", partyMode);
     
     // Si es modo impostor, podemos mandar a una ruta distinta o pasarle un parámetro especial
     if (partyMode === "imposter") {
