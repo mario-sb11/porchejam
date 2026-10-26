@@ -48,6 +48,7 @@ Navegador (React)  ──►  /api/* (Vercel Functions)  ──►  api.deezer.c
 | `GET /api/search?q=&type=artist\|track\|playlist` | Buscador |
 | `GET /api/tracks?id=&type=playlist\|artist\|album&index=` | Canciones con preview (paginado de 50 en 50) |
 | `GET /api/race/connections?id=&type=artist\|track\|album` | Conexiones para Music Race |
+| `GET /api/preview?id=` | Renueva la URL de una preview (Deezer las firma con ~15 min de validez) |
 
 El progreso del jugador invitado se guarda en el navegador (`localStorage`, claves `porchejam_*`).
 

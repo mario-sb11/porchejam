@@ -13,8 +13,13 @@ export class HttpError extends Error {
 export const CACHE = {
   /** Datos que cambian poco (búsquedas, conexiones de Music Race). */
   long: "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400",
-  /** Listas de canciones: las URLs de preview de Deezer caducan, así que se renuevan antes. */
-  tracks: "public, max-age=120, s-maxage=600, stale-while-revalidate=600",
+  /**
+   * Listas de canciones. Las URLs de preview de Deezer caducan ~15 min después de generarse,
+   * así que la respuesta cacheada nunca puede tener más de 3 min (le quedan >= 12 min de vida).
+   */
+  tracks: "public, max-age=60, s-maxage=120, stale-while-revalidate=60",
+  /** Una sola preview recién firmada (ver /api/preview). */
+  preview: "public, max-age=30, s-maxage=60",
   none: "no-store",
 } as const;
 

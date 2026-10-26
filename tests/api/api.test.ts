@@ -178,3 +178,18 @@ describe("/api/race/connections", () => {
     expect((await res.json()).options).toEqual([]);
   });
 });
+
+describe("/api/preview", () => {
+  it("devuelve una preview recién firmada", async () => {
+    const { GET: preview } = await import("../../api/preview");
+    mockDeezer({ "/track/42": dzTrack(42) });
+    const res = await preview(req("/api/preview?id=42"));
+    expect(await res.json()).toEqual({ previewUrl: "https://cdnt-preview.dzcdn.net/42.mp3" });
+  });
+
+  it("canción inexistente devuelve null", async () => {
+    const { GET: preview } = await import("../../api/preview");
+    mockDeezer({});
+    expect(await (await preview(req("/api/preview?id=1"))).json()).toEqual({ previewUrl: null });
+  });
+});

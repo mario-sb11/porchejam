@@ -9,6 +9,7 @@ import MusicVisualizer from "@/components/MusicVisualizer";
 import ScorePop from "@/components/ScorePop";
 import { calculateScore } from "@/data/mockData";
 import { apiUrl } from "@/lib/api";
+import { freshPreviewUrl } from "@/lib/preview";
 
 interface Track {
   id: string;
@@ -297,7 +298,9 @@ const GameInterface = () => {
     stopAllAudio();
 
     const playAudio = async () => {
-      if (!validTrack.previewUrl) { handleTimeUp(); return; }
+      // En partidas largas la URL firmada de Deezer puede haber caducado: se renueva si hace falta.
+      const previewUrl = await freshPreviewUrl(validTrack);
+      if (!previewUrl) { handleTimeUp(); return; }
 
       if (specialMode === "inverso") {
         try {
@@ -305,7 +308,7 @@ const GameInterface = () => {
           const ctx = new AudioContext();
           audioCtxRef.current = ctx;
           
-          const res = await fetch(validTrack.previewUrl);
+          const res = await fetch(previewUrl);
           const arrayBuffer = await res.arrayBuffer();
           const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
           
@@ -322,15 +325,15 @@ const GameInterface = () => {
           source.start();
           setIsPlaying(true);
         } catch (e) {
-          const audio = new Audio(validTrack.previewUrl);
+          const audio = new Audio(previewUrl);
           audio.volume = 0.5;
           audio.loop = isHotPotato;
-          audio.play();
+          audio.play().catch(console.error);
           audioRef.current = audio;
           setIsPlaying(true);
         }
       } else {
-        const audio = new Audio(validTrack.previewUrl);
+        const audio = new Audio(previewUrl);
         audio.volume = 0.5;
         audio.loop = isHotPotato;
         audioRef.current = audio;
