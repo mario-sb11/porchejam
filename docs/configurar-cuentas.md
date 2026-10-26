@@ -4,8 +4,8 @@ La app funciona sin cuentas (modo invitado). Para activarlas hacen falta estos p
 
 ## 1. Base de datos
 
-Aplica `supabase/migrations/20261026010000_cuentas.sql` en el proyecto `porchejam` de Supabase
-(SQL Editor → pegar → Run, o pedírselo a Claude). Crea:
+Aplica, en orden, los archivos de `supabase/migrations/` en el proyecto `porchejam` de Supabase
+(SQL Editor → pegar → Run, o pedírselo a Claude). Crean:
 
 | Tabla | Contenido | Quién la lee |
 | --- | --- | --- |
@@ -15,6 +15,7 @@ Aplica `supabase/migrations/20261026010000_cuentas.sql` en el proyecto `porcheja
 
 Nadie puede escribir directamente en `player_stats` ni en `matches`: solo a través de las funciones
 `record_match` e `import_guest_stats`, que validan los datos y limitan la frecuencia.
+`delete_my_account` permite a cada jugador borrar su cuenta y todos sus datos (RGPD).
 
 ## 2. URLs permitidas en Supabase
 

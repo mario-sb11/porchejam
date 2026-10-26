@@ -15,6 +15,8 @@ interface AuthState {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Borra la cuenta y todos sus datos (derecho de supresión). */
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthState | null>(null);
@@ -93,6 +95,13 @@ export function AuthProviderRoot({ children }: { children: ReactNode }) {
     setSession(null);
   }, []);
 
+  const deleteAccount = useCallback(async () => {
+    if (!supabase) return;
+    const { error } = await supabase.rpc("delete_my_account");
+    if (error) throw error;
+    await signOut();
+  }, [signOut]);
+
   const value = useMemo<AuthState>(
     () => ({
       accountsEnabled,
@@ -103,8 +112,9 @@ export function AuthProviderRoot({ children }: { children: ReactNode }) {
       signInWithGoogle,
       signInWithEmail,
       signOut,
+      deleteAccount,
     }),
-    [session, profile, loading, signInWithGoogle, signInWithEmail, signOut],
+    [session, profile, loading, signInWithGoogle, signInWithEmail, signOut, deleteAccount],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
