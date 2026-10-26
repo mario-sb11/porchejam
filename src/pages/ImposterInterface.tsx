@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 
 import MusicVisualizer from "@/components/MusicVisualizer";
 import { apiUrl } from "@/lib/api";
+import { recordMatch } from "@/lib/cloud";
 
 
 // Helper para mezclar arrays aleatoriamente
@@ -297,37 +298,25 @@ const ImposterInterface = () => {
     setWinner(finalWinner);
     setPhase("result");
 
-    try {
-      const history = JSON.parse(localStorage.getItem("porchejam_match_history") || "[]");
-      const newMatch = {
-        id: Date.now(),
-        date: new Date().toLocaleDateString(),
+    recordMatch({
+      mode: "party",
+      modeKey: `party-imposter-${revealMode}`,
+      score: 0,
+      correct: 0,
+      rounds: 0,
+      record: {
         mode: "party",
         specialMode: "imposter",
-        playlist: "Partida Infiltrado", 
-        cover: "🕵️‍♂️", 
+        playlist: "Partida Infiltrado",
+        cover: "🕵️‍♂️",
         score: finalWinner === "impostor" ? "¡Gana Infiltrado!" : "¡Ganan Reales!",
+        accuracy: "",
         imposterName: players.find(p => p.id === imposterId)?.name,
         trackName: currentTrack?.name,
         trackArtist: currentTrack?.artist,
-        topPlayers: players 
-      };
-      
-      history.unshift(newMatch);
-      if (history.length > 20) history.pop();
-      localStorage.setItem("porchejam_match_history", JSON.stringify(history));
-
-      const partyGames = parseInt(localStorage.getItem("porchejam_party_games") || "0");
-      localStorage.setItem("porchejam_party_games", (partyGames + 1).toString());
-
-      const tally = JSON.parse(localStorage.getItem("porchejam_mode_tally") || "{}");
-      const favKey = `party-imposter-${revealMode}`;
-      tally[favKey] = (tally[favKey] || 0) + 1;
-      localStorage.setItem("porchejam_mode_tally", JSON.stringify(tally));
-
-    } catch (e) {
-      console.error("Error guardando estadísticas", e);
-    }
+        topPlayers: players.map(p => ({ name: p.name, emoji: p.emoji, score: 0 })),
+      },
+    });
   };
 
   const radius = 80;
