@@ -16,9 +16,10 @@ La aplicación se estructura en torno a diferentes formas de interactuar con la 
     * **Modo Fiesta Local "Por turnos":** Adivinar canción/artista por rondas, supervivencia, la patata caliente, reversa
     * **Modo Fiesta Local "Impostor":** Dinámica de deducción social donde varios jugadores reciben la misma información sobre una canción (audio, nombre y artista), excepto 1 (el impostor) que recibirá una pista o nada, este debe fingir que tiene la misma información que el resto sin haberla recibido, los jugadores reales tienen que pillar al impostor.
     * **Modo Multijugador en línea:** Este modo se encuentra en desarrollo.
-2. **Music Race:** Un reto de lógica y cultura musical. El objetivo es conectar un artista inicial con uno de destino navegando únicamente a través de sus álbumes, colaboraciones y artistas relacionados.
-3. **Buscador y Personalización:** Herramienta para explorar el catálogo global y configurar partidas basadas en gustos específicos.
-4. **Mascota Interactiva (Mapi):** Un componente de UI animado que reacciona a la interacción del usuario. Gestiona estados globales para activar el "Modo Rave", un Easter Egg que transforma la estética y el comportamiento sonoro de la aplicación.
+2. **Canción del Día:** reto diario estilo Heardle en 5 categorías (España, Global, Urbano, Clásicos y Comodín). Todos tienen la misma canción, 6 intentos con fragmentos cada vez más largos, rachas y resultado para compartir.
+3. **Music Race:** Un reto de lógica y cultura musical. El objetivo es conectar un artista inicial con uno de destino navegando únicamente a través de sus álbumes, colaboraciones y artistas relacionados.
+4. **Buscador y Personalización:** Herramienta para explorar el catálogo global y configurar partidas basadas en gustos específicos.
+5. **Mascota Interactiva (Mapi):** Un componente de UI animado que reacciona a la interacción del usuario. Gestiona estados globales para activar el "Modo Rave", un Easter Egg que transforma la estética y el comportamiento sonoro de la aplicación.
 
 ## Metodología de Desarrollo: Vibe Coding
 
@@ -49,6 +50,9 @@ Navegador (React)  ──►  /api/* (Vercel Functions)  ──►  api.deezer.c
 | `GET /api/tracks?id=&type=playlist\|artist\|album&index=` | Canciones con preview (paginado de 50 en 50) |
 | `GET /api/race/connections?id=&type=artist\|track\|album` | Conexiones para Music Race |
 | `GET /api/preview?id=` | Renueva la URL de una preview (Deezer las firma con ~15 min de validez) |
+| `GET /api/daily/puzzle?category=` | Audio de la Canción del Día (sin título ni artista) |
+| `GET /api/daily/guess?category=&date=&id=` | Comprueba una respuesta en el servidor |
+| `GET /api/daily/reveal?category=&date=` | Desvela la canción al terminar |
 
 ### Cuentas y progreso
 

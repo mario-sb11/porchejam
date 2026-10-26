@@ -21,6 +21,7 @@ const PostGameSummary = lazy(() => import("./pages/PostGameSummary"));
 const FinalResults = lazy(() => import("./pages/FinalResults"));
 const DailyChallenge = lazy(() => import("./pages/DailyChallenge"));
 const DailyChallengeResult = lazy(() => import("./pages/DailyChallengeResult"));
+const DailyGame = lazy(() => import("./pages/DailyGame"));
 const UserProfile = lazy(() => import("./pages/UserProfile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const PreGameStats = lazy(() => import("./pages/PreGameStats"));
@@ -57,7 +58,8 @@ const App = () => (
               <Route path="/summary" element={<PostGameSummary />} />
               <Route path="/results" element={<FinalResults />} />
               <Route path="/cancion-del-dia" element={<DailyChallenge />} />
-              <Route path="/daily-result" element={<DailyChallengeResult />} />
+              <Route path="/cancion-del-dia/:categoria" element={<DailyGame />} />
+              <Route path="/cancion-del-dia/:categoria/resultado" element={<DailyChallengeResult />} />
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/stats" element={<PreGameStats />} />
               <Route path="/privacy" element={<Privacy />} />

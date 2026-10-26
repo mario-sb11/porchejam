@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Music2, Radio, Play, Lock, Route, Disc3 } from "lucide-react";
+import { Music2, Radio, Play, Route, Disc3 } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import GlassCard from "@/components/ui/GlassCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -361,16 +361,19 @@ const Dashboard = () => {
 
           {/* MODO: CANCIÓN DEL DÍA */}
           <motion.div variants={itemVariants}>
-            <GlassCard className="h-full p-6 md:p-8 flex flex-col justify-between border-white/10 bg-white/5 opacity-80">
+            <GlassCard
+              className="h-full p-6 md:p-8 flex flex-col justify-between border-secondary/30 bg-gradient-to-br from-secondary/10 to-transparent cursor-pointer hover:border-secondary/60 transition-colors"
+              onClick={() => navigate("/cancion-del-dia")} role="button" tabIndex={0}
+            >
               <div>
                 <div className="flex items-start justify-between gap-4 mb-4">
                   <div className="p-3 rounded-xl bg-secondary/20 text-secondary"><Music2 className="h-6 w-6" /></div>
-                  <span className="flex items-center gap-1 rounded-full bg-zinc-800/80 px-3 py-1 text-[10px] uppercase font-bold text-zinc-400 border border-white/10">
-                    <Lock className="w-3 h-3" /> Próximamente
+                  <span className="flex items-center gap-1 rounded-full bg-secondary/20 px-3 py-1 text-[10px] uppercase font-bold text-secondary border border-secondary/30">
+                    Nuevo
                   </span>
                 </div>
                 <h3 className="text-2xl font-display font-bold text-white mb-2">Daily Track</h3>
-                <p className="text-sm text-zinc-400">Un reto global cada 24 horas. ¿Adivinarás la canción antes que nadie?</p>
+                <p className="text-sm text-zinc-400">La misma canción para todos cada día. 6 intentos, 5 categorías. ¿Mantienes la racha?</p>
               </div>
             </GlassCard>
           </motion.div>
