@@ -26,11 +26,6 @@ const Landing = () => {
     }
   };
 
-  const handleGoogleLogin = () => {
-    console.log("Iniciando sesión con Google...");
-    alert("¡Pronto conectaremos esto con la base de datos!");
-  };
-
   return (
     <div className="min-h-screen gradient-bg flex flex-col items-center justify-center px-4 overflow-hidden relative">
       
@@ -71,8 +66,10 @@ const Landing = () => {
         >
           <button
             type="button"
-            onClick={handleGoogleLogin}
-            className="h-14 w-full rounded-full bg-white text-black hover:bg-zinc-200 font-bold text-lg flex items-center justify-center transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)]"
+            disabled
+            aria-disabled="true"
+            title="Muy pronto podrás guardar tu progreso con tu cuenta de Google"
+            className="relative h-14 w-full rounded-full bg-white/80 text-black font-bold text-lg flex items-center justify-center opacity-60 cursor-not-allowed"
           >
             <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -81,6 +78,7 @@ const Landing = () => {
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             Continuar con Google
+            <span className="absolute -top-2 right-4 rounded-full bg-secondary px-2 py-0.5 text-[10px] uppercase tracking-wider text-white">Próximamente</span>
           </button>
 
           <div className="flex items-center gap-4 px-2">

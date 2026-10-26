@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,25 +9,25 @@ import CookieBanner from "@/components/CookieBanner";
 
 import Landing from "./pages/Landing";
 import Dashboard from "./pages/Dashboard";
-import PlaylistSelection from "./pages/PlaylistSelection";
-import GameModes from "./pages/GameModes";
-import LocalLobby from "./pages/LocalLobby";
-import GameSettings from "./pages/GameSettings";
-import GameInterface from "./pages/GameInterface";
-import ImposterInterface from "./pages/ImposterInterface"; 
-import Lobby from "./pages/Lobby";
-import PostGameSummary from "./pages/PostGameSummary";
-import FinalResults from "./pages/FinalResults";
-import DailyChallenge from "./pages/DailyChallenge";
-import DailyChallengeResult from "./pages/DailyChallengeResult";
-import UserProfile from "./pages/UserProfile";
-import NotFound from "./pages/NotFound";
-import PreGameStats from "./pages/PreGameStats"; 
-import Privacy from "./pages/Privacy";
-import Terms from "./pages/Terms";
-import LegalNotice from "./pages/LegalNotice";
-import MusicRace from "./pages/MusicRace";
-import MusicRaceGame from "./pages/MusicRaceGame";
+const PlaylistSelection = lazy(() => import("./pages/PlaylistSelection"));
+const GameModes = lazy(() => import("./pages/GameModes"));
+const LocalLobby = lazy(() => import("./pages/LocalLobby"));
+const GameSettings = lazy(() => import("./pages/GameSettings"));
+const GameInterface = lazy(() => import("./pages/GameInterface"));
+const ImposterInterface = lazy(() => import("./pages/ImposterInterface"));
+const Lobby = lazy(() => import("./pages/Lobby"));
+const PostGameSummary = lazy(() => import("./pages/PostGameSummary"));
+const FinalResults = lazy(() => import("./pages/FinalResults"));
+const DailyChallenge = lazy(() => import("./pages/DailyChallenge"));
+const DailyChallengeResult = lazy(() => import("./pages/DailyChallengeResult"));
+const UserProfile = lazy(() => import("./pages/UserProfile"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const PreGameStats = lazy(() => import("./pages/PreGameStats"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Terms = lazy(() => import("./pages/Terms"));
+const LegalNotice = lazy(() => import("./pages/LegalNotice"));
+const MusicRace = lazy(() => import("./pages/MusicRace"));
+const MusicRaceGame = lazy(() => import("./pages/MusicRaceGame"));
 
 
 const queryClient = new QueryClient();
@@ -39,6 +40,8 @@ const App = () => (
       <BrowserRouter>
         <div className="min-h-screen flex flex-col">
           <div className="flex-1">
+            {/* Cada pantalla se descarga solo cuando se visita: la primera carga es mucho más ligera. */}
+            <Suspense fallback={<div className="min-h-screen gradient-bg" aria-busy="true" />}>
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -62,6 +65,7 @@ const App = () => (
               <Route path="/music-race-game" element={<MusicRaceGame />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </div>
           <Footer />
           <CookieBanner />

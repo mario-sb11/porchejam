@@ -8,6 +8,7 @@ import CircularTimer from "@/components/CircularTimer";
 import MusicVisualizer from "@/components/MusicVisualizer";
 import ScorePop from "@/components/ScorePop";
 import { calculateScore } from "@/data/mockData";
+import { apiUrl } from "@/lib/api";
 
 interface Track {
   id: string;
@@ -18,7 +19,7 @@ interface Track {
 }
 
 //  Garantiza mezcla 100% aleatoria
-const shuffleArray = (array: any[]) => {
+const shuffleArray = <T,>(array: T[]): T[] => {
   const newArr = [...array];
   for (let i = newArr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -31,7 +32,6 @@ const shuffleArray = (array: any[]) => {
 const normalizeText = (text: string) =>
   text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, "").trim();
 
-const API_BASE_URL = import.meta.env.DEV ? "/api" : "https://porchify-api.onrender.com/api";
 
 const GameInterface = () => {
   const navigate = useNavigate();
@@ -49,9 +49,9 @@ const GameInterface = () => {
   const isPartyMode = searchParams.get("mode") === "party";
   const isHotPotato = isPartyMode && specialMode === "contrarreloj";
   const partyPlayers: { id: number; name: string; emoji: string }[] = isPartyMode
-    ? (() => { try { return JSON.parse(localStorage.getItem("porchify_party_players") || "[]"); } catch { return []; } })()
+    ? (() => { try { return JSON.parse(localStorage.getItem("porchejam_party_players") || "[]"); } catch { return []; } })()
     : [];
-  const partyType = isPartyMode ? (localStorage.getItem("porchify_party_mode") || "turns") : "turns";
+  const partyType = isPartyMode ? (localStorage.getItem("porchejam_party_mode") || "turns") : "turns";
 
   // CORE & LAZY LOADING (MIX-TAPE)
   const [pool, setPool] = useState<Track[]>([]);
@@ -123,9 +123,9 @@ const GameInterface = () => {
 
   // 1. CARGA INICIAL MASIVA PROFUNDA
   useEffect(() => {
-    const playType = localStorage.getItem("porchify_selected_type");
-    const singleId = localStorage.getItem("porchify_selected_playlist");
-    const mixItemsStr = localStorage.getItem("porchify_mix_items");
+    const playType = localStorage.getItem("porchejam_selected_type");
+    const singleId = localStorage.getItem("porchejam_selected_playlist");
+    const mixItemsStr = localStorage.getItem("porchejam_mix_items");
 
     if (!playType) return navigate("/playlists");
 
@@ -140,19 +140,21 @@ const GameInterface = () => {
     const fetchInitialPool = async () => {
       try {
         let initialTracks: Track[] = [];
-        let newPagination: Record<string, number> = {};
+        const newPagination: Record<string, number> = {};
 
         await Promise.all(sources.map(async (source) => {
           const pagesToFetch = [0, 50, 100, 150]; 
           await Promise.all(pagesToFetch.map(async (idx) => {
             try {
-              const res = await fetch(`${API_BASE_URL}/tracks?id=${source.id}&type=${source.type}&index=${idx}`);
+              const res = await fetch(apiUrl("tracks", { id: source.id, type: source.type, index: idx }));
               if (res.ok) {
                 const data = await res.json();
                 initialTracks = [...initialTracks, ...data.tracks];
                 if (idx === 150 && data.nextIndex) newPagination[source.id] = data.nextIndex;
               }
-            } catch (e) {}
+            } catch {
+              // Una página que falla no debe impedir empezar con las demás.
+            }
           }));
         }));
 
@@ -182,7 +184,7 @@ const GameInterface = () => {
       const nextIdx = paginationMap[randomSource.id];
 
       try {
-        const res = await fetch(`${API_BASE_URL}/tracks?id=${randomSource.id}&type=${randomSource.type}&index=${nextIdx}`);
+        const res = await fetch(apiUrl("tracks", { id: randomSource.id, type: randomSource.type, index: nextIdx }));
         if (res.ok) {
           const data = await res.json();
           if (data.tracks && data.tracks.length > 0) setPool(prev => shuffleArray([...prev, ...data.tracks]));
@@ -193,7 +195,9 @@ const GameInterface = () => {
             return updated;
           });
         }
-      } catch (error) {}
+      } catch {
+        // La carga en segundo plano es opcional: se reintenta en el siguiente ciclo.
+      }
     }, 10000); 
     return () => clearInterval(dripInterval);
   }, [loadingPool, mixSources, paginationMap]);
@@ -216,7 +220,7 @@ const GameInterface = () => {
 
   const stopAllAudio = useCallback(() => {
     if (audioRef.current) audioRef.current.pause();
-    if (sourceRef.current) { try { sourceRef.current.stop(); } catch (e) {} }
+    if (sourceRef.current) { try { sourceRef.current.stop(); } catch { /* ya estaba parado */ } }
     if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') { 
      audioCtxRef.current.close().catch(e => console.log(e)); 
     }
@@ -224,7 +228,7 @@ const GameInterface = () => {
 
   const handleGameOver = useCallback(() => {
     stopAllAudio();
-    localStorage.setItem("porchify_last_score", score.toString());
+    localStorage.setItem("porchejam_last_score", score.toString());
     const gameMode = searchParams.get("mode") || "solo";
     
     let finalRoundsPlayed = currentRoundVisual;
@@ -297,7 +301,7 @@ const GameInterface = () => {
 
       if (specialMode === "inverso") {
         try {
-          const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+          const AudioContext = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
           const ctx = new AudioContext();
           audioCtxRef.current = ctx;
           

@@ -8,7 +8,7 @@ import { MOCK_SONGS } from "@/data/mockData";
 const DailyChallengeResult = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as any;
+  const state = location.state as { won?: boolean; attempts?: boolean[]; time?: number; categoryId?: string } | null;
 
   const won = state?.won ?? true;
   const attempts = state?.attempts ?? [true, false, false, true];

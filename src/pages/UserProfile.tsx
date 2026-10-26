@@ -4,6 +4,7 @@ import { ArrowLeft, Trophy, Target, Zap, Flame, Music, LogOut, Edit2, X, User } 
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { readPlayerStats, type PlayerStats } from "@/lib/playerStats";
 
 // Lista de avatares gratuitos (emojis + personas de Dicebear)
 const FREE_AVATARS = [
@@ -21,19 +22,12 @@ const FREE_AVATARS = [
   "🎧", "🎸", "🎤", "🦝", "🔥", "⚡"
 ];
 
-interface GameHistoryEntry {
-  mode: string;
-  score: number;
-  date: string;
-  correctAnswers?: number;
-}
-
 const UserProfile = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState("Cargando...");
   const [currentAvatar, setCurrentAvatar] = useState("default");
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  const [gameHistory, setGameHistory] = useState<GameHistoryEntry[]>([]);
+  const [playerStats, setPlayerStats] = useState<PlayerStats>(() => readPlayerStats());
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("porchejam_username");
@@ -48,36 +42,17 @@ const UserProfile = () => {
       setCurrentAvatar(savedAvatar);
     }
 
-    // Cargar historial real
-    const savedHistory = localStorage.getItem("gameHistory");
-    if (savedHistory) {
-      try {
-        setGameHistory(JSON.parse(savedHistory));
-      } catch (e) {
-        console.error("Error parsing game history", e);
-      }
-    }
+    // Estadísticas reales guardadas por la pantalla de resumen de cada partida
+    setPlayerStats(readPlayerStats());
   }, [navigate]);
 
-  // Calcula estadísticas reales basadas en el historial
-  const totalGames = gameHistory.length;
-  const bestScore = totalGames > 0 ? Math.max(...gameHistory.map(g => g.score)) : 0;
-  const correctAnswers = gameHistory.reduce((acc, curr) => acc + (curr.correctAnswers || 0), 0);
-  
-  // Modo favorito simple: el que más aparece en el historial (simplificado)
-  const favouriteMode = totalGames > 0 
-    ? gameHistory.sort((a,b) =>
-          gameHistory.filter(v => v.mode===a.mode).length
-        - gameHistory.filter(v => v.mode===b.mode).length
-      ).pop()?.mode || "Ninguno"
-    : "Ninguno";
-
+  const gameHistory = playerStats.recentMatches;
   const stats = [
-    { icon: Trophy, label: "Partidas", value: String(totalGames), color: "text-primary" },
-    { icon: Zap, label: "Mejor puntuación", value: bestScore.toLocaleString(), color: "text-secondary" },
-    { icon: Target, label: "Aciertos totales", value: String(correctAnswers), color: "text-accent" },
-    { icon: Music, label: "Modo favorito", value: favouriteMode, color: "text-primary" },
-    { icon: Flame, label: "Racha actual", value: "0", color: "text-accent" }, // La racha es más compleja de calcular sin fecha/hora exacta
+    { icon: Trophy, label: "Partidas", value: String(playerStats.totalGames), color: "text-primary" },
+    { icon: Zap, label: "Mejor puntuación", value: playerStats.highScore.toLocaleString("es-ES"), color: "text-secondary" },
+    { icon: Target, label: "Aciertos totales", value: String(playerStats.totalCorrect), color: "text-accent" },
+    { icon: Music, label: "Modo favorito", value: playerStats.favoriteMode ?? "Ninguno", color: "text-primary" },
+    { icon: Flame, label: "Precisión", value: playerStats.accuracy === null ? "—" : `${playerStats.accuracy}%`, color: "text-accent" },
   ];
 
   const handleLogout = () => {
@@ -172,9 +147,9 @@ const UserProfile = () => {
                  Aún no has jugado ninguna partida. ¡Ve al Dashboard y empieza una Jam Session!
                </div>
             ) : (
-              gameHistory.slice().reverse().slice(0, 10).map((game, i) => (
+              gameHistory.slice(0, 10).map((game, i) => (
                 <motion.div
-                  key={i}
+                  key={game.id ?? i}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.35 + i * 0.05 }}
@@ -182,13 +157,13 @@ const UserProfile = () => {
                 >
                   <div>
                     <div className="text-sm font-semibold text-foreground">
-                      Jam Session <span className="text-primary opacity-80">· {game.mode}</span>
+                      {game.cover} {game.playlist} <span className="text-primary opacity-80">· {game.mode === "solo" ? "Solitario" : "Fiesta"} {game.specialMode}</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(game.date).toLocaleDateString()} · <span className="text-white/80">{game.correctAnswers || 0} aciertos</span>
+                      {game.date} · <span className="text-white/80">{game.accuracy} aciertos</span>
                     </div>
                   </div>
-                  <div className="text-lg font-display font-bold text-primary">{game.score.toLocaleString()}</div>
+                  <div className="text-lg font-display font-bold text-primary">{game.score}</div>
                 </motion.div>
               ))
             )}

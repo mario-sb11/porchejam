@@ -32,6 +32,7 @@ const modes = [
     color: "from-accent to-accent/60",
     glowClass: "glow-magenta",
     route: "/lobby",
+    comingSoon: true,
   },
 ];
 
@@ -86,12 +87,17 @@ const GameModes = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.15 }}
-              whileHover={{ scale: 1.03, y: -4 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => navigate(mode.route)}
-              className=""
+              whileHover={mode.comingSoon ? undefined : { scale: 1.03, y: -4 }}
+              whileTap={mode.comingSoon ? undefined : { scale: 0.98 }}
+              onClick={() => !mode.comingSoon && navigate(mode.route)}
+              aria-disabled={mode.comingSoon || undefined}
             >
-              <GlassCard className="rounded-2xl p-6 cursor-pointer group relative overflow-hidden">
+              <GlassCard className={`rounded-2xl p-6 group relative overflow-hidden ${mode.comingSoon ? "opacity-60 grayscale cursor-not-allowed select-none" : "cursor-pointer"}`}>
+              {mode.comingSoon && (
+                <div className="absolute top-3 right-3 bg-black/60 border border-white/10 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full text-muted-foreground font-bold flex items-center gap-1">
+                  <Hammer className="w-3 h-3" /> Próximamente
+                </div>
+              )}
               <div className={`absolute inset-0 bg-gradient-to-br ${mode.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
               <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${mode.color} flex items-center justify-center mb-4`}>
                 <mode.icon className="w-7 h-7 text-primary-foreground" />

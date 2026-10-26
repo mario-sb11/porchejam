@@ -72,12 +72,12 @@ const PostGameSummary = () => {
     // 1. Récord Global (Solo)
     let myScore = score;
     if (mode === "solo") {
-      const savedHighScore = parseInt(localStorage.getItem("porchify_high_score") || "0");
+      const savedHighScore = parseInt(localStorage.getItem("porchejam_high_score") || "0");
       setHighScore(Math.max(savedHighScore, score));
       
       if (score > savedHighScore && score > 0) {
         setIsNewRecord(true);
-        localStorage.setItem("porchify_high_score", score.toString());
+        localStorage.setItem("porchejam_high_score", score.toString());
         setHighScore(score);
       }
     } else {
@@ -86,34 +86,34 @@ const PostGameSummary = () => {
 
     // 2. Contadores Categorizados
     if (mode === "solo") {
-      const currentSoloGames = parseInt(localStorage.getItem("porchify_solo_games") || "0");
-      localStorage.setItem("porchify_solo_games", (currentSoloGames + 1).toString());
+      const currentSoloGames = parseInt(localStorage.getItem("porchejam_solo_games") || "0");
+      localStorage.setItem("porchejam_solo_games", (currentSoloGames + 1).toString());
       
-      const currentTotalCorrect = parseInt(localStorage.getItem("porchify_total_correct") || "0");
-      const currentTotalRounds = parseInt(localStorage.getItem("porchify_total_rounds") || "0");
-      localStorage.setItem("porchify_total_correct", (currentTotalCorrect + correctGuesses).toString());
-      localStorage.setItem("porchify_total_rounds", (currentTotalRounds + roundsPlayed).toString());
+      const currentTotalCorrect = parseInt(localStorage.getItem("porchejam_total_correct") || "0");
+      const currentTotalRounds = parseInt(localStorage.getItem("porchejam_total_rounds") || "0");
+      localStorage.setItem("porchejam_total_correct", (currentTotalCorrect + correctGuesses).toString());
+      localStorage.setItem("porchejam_total_rounds", (currentTotalRounds + roundsPlayed).toString());
     } else {
-      const currentPartyGames = parseInt(localStorage.getItem("porchify_party_games") || "0");
-      localStorage.setItem("porchify_party_games", (currentPartyGames + 1).toString());
+      const currentPartyGames = parseInt(localStorage.getItem("porchejam_party_games") || "0");
+      localStorage.setItem("porchejam_party_games", (currentPartyGames + 1).toString());
     }
 
     // Historial del modo más jugado
-    const currentModeTallyStr = localStorage.getItem("porchify_mode_tally") || "{}";
+    const currentModeTallyStr = localStorage.getItem("porchejam_mode_tally") || "{}";
     const currentModeTally = JSON.parse(currentModeTallyStr);
     const modeKey = `${mode}-${specialMode}`;
     currentModeTally[modeKey] = (currentModeTally[modeKey] || 0) + 1;
-    localStorage.setItem("porchify_mode_tally", JSON.stringify(currentModeTally));
+    localStorage.setItem("porchejam_mode_tally", JSON.stringify(currentModeTally));
 
     // 3. Bombas Sufridas
     if (mode === "solo" && specialMode === "contrarreloj" && loserId) {
-      const currentBombs = parseInt(localStorage.getItem("porchify_bombs_suffered") || "0");
-      localStorage.setItem("porchify_bombs_suffered", (currentBombs + 1).toString());
+      const currentBombs = parseInt(localStorage.getItem("porchejam_bombs_suffered") || "0");
+      localStorage.setItem("porchejam_bombs_suffered", (currentBombs + 1).toString());
     }
 
     // 4. Historial Interactivo
-    const playlistName = localStorage.getItem("porchify_selected_playlist_name") || "Mix Aleatorio";
-    const playType = localStorage.getItem("porchify_selected_type") || "playlist";
+    const playlistName = localStorage.getItem("porchejam_selected_playlist_name") || "Mix Aleatorio";
+    const playType = localStorage.getItem("porchejam_selected_type") || "playlist";
     const coverEmoji = playType === "artist" ? "🎤" : (playType === "mix" ? "⚔️" : "🎵");
     
     const specialModeNames: Record<string, string> = {
@@ -132,13 +132,13 @@ const PostGameSummary = () => {
       topPlayers: mode === "party" ? rankedPlayers.slice(0, 3).map(p => ({ name: p.name, emoji: p.emoji, score: p.score })) : null
     };
 
-    const historyData = localStorage.getItem("porchify_match_history");
+    const historyData = localStorage.getItem("porchejam_match_history");
     let matchHistory = historyData ? JSON.parse(historyData) : [];
     
     matchHistory.unshift(newMatch);
     if (matchHistory.length > 10) matchHistory = matchHistory.slice(0, 10); 
     
-    localStorage.setItem("porchify_match_history", JSON.stringify(matchHistory));
+    localStorage.setItem("porchejam_match_history", JSON.stringify(matchHistory));
 
   }, [mode, score, specialMode, correctGuesses, roundsPlayed, loserId, partyScores, partyPlayers.length, rankedPlayers, isHotPotato, loser]);
 

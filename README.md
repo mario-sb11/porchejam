@@ -29,33 +29,56 @@ Este proyecto se ha ejecutado bajo la filosofía de **Vibe Coding**. Como recié
 
 ## Stack Tecnológico
 
-* **Frontend:** React (Vite), Tailwind CSS con estética Glassmorphism y Framer Motion para la gestión de estados y animaciones complejas.
-* **Backend:** Node.js con Express, configurado como middleware para procesar, filtrar y servir los datos de la API de Deezer de forma eficiente.
-* **API:** Integración con Deezer API para el manejo de imágenes, metadatos y previews de audio.
+* **Frontend:** React 18 + TypeScript (Vite), Tailwind CSS con estética Glassmorphism y Framer Motion para animaciones.
+* **Backend:** funciones serverless de Vercel en `/api` (TypeScript). Actúan como capa intermedia (BFF) entre la app y la API de Deezer: validan cada parámetro, filtran los datos que necesita el cliente y cachean las respuestas en la CDN.
+* **API:** Deezer API para imágenes, metadatos y previews de audio de 30 segundos.
+
+## Arquitectura
+
+```
+Navegador (React)  ──►  /api/* (Vercel Functions)  ──►  api.deezer.com
+       │                        │
+       │                        └─ caché en la CDN de Vercel + reintentos si Deezer limita peticiones
+       └─ audio: se descarga directamente del CDN de Deezer (no pasa por el servidor)
+```
+
+| Endpoint | Uso |
+| --- | --- |
+| `GET /api/top-playlists` | Playlists destacadas |
+| `GET /api/search?q=&type=artist\|track\|playlist` | Buscador |
+| `GET /api/tracks?id=&type=playlist\|artist\|album&index=` | Canciones con preview (paginado de 50 en 50) |
+| `GET /api/race/connections?id=&type=artist\|track\|album` | Conexiones para Music Race |
+
+El progreso del jugador invitado se guarda en el navegador (`localStorage`, claves `porchejam_*`).
+
+### Seguridad
+
+* Validación estricta de entradas en el backend (ids numéricos, tipos permitidos, límites de longitud y paginación).
+* Sin CORS abierto: el backend solo se consume desde el propio dominio.
+* Cabeceras de seguridad en `vercel.json`: Content-Security-Policy, HSTS, `X-Frame-Options`, `nosniff`, `Referrer-Policy` y `Permissions-Policy`.
+* Los errores internos nunca se devuelven al cliente.
 
 ## Despliegue y Demo
 
-La aplicación está desplegada y es totalmente funcional en el siguiente enlace:
-**(https://porche-jam.vercel.app/)**
+La aplicación está desplegada en **https://porche-jam.vercel.app/**. Cada push a `main` se publica automáticamente en Vercel (frontend y backend juntos) y cada rama genera una URL de previsualización.
 
 ---
 
 ## Instalación y ejecución local
 
-Si quieres clonar el proyecto y ejecutarlo en tu máquina para ver el código en acción o realizar pruebas:
+Requisitos: Node.js 20 o superior.
 
-1. Instalar las dependencias (Vite + React + Express):
-   npm install
+```bash
+npm install
+npm run dev        # frontend + /api en http://127.0.0.1:5173
+```
 
-2. Iniciar el entorno de desarrollo:
-    npm run dev
+No hace falta arrancar ningún servidor aparte: en desarrollo, Vite sirve también las funciones de `/api`.
 
-    Nota: Asegúrate de configurar las variables de entorno para que el frontend pueda comunicarse correctamente con el servidor de la API.
-
-3. Iniciar el server.js:
-
-    Instala las dependencias del backend:
-    npm install
-
-    Inicia el servidor:
-    node server.js
+| Script | Qué hace |
+| --- | --- |
+| `npm run dev` | Entorno de desarrollo |
+| `npm run build` | Build de producción |
+| `npm run typecheck` | Comprobación de tipos (app, API y configuración) |
+| `npm run lint` | ESLint |
+| `npm test` | Tests (Vitest) |

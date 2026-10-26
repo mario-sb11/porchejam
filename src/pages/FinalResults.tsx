@@ -10,7 +10,7 @@ const confettiEmojis = ["🎉", "🎊", "✨", "🏆", "⭐"];
 const FinalResults = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as any;
+  const state = location.state as { score?: number; rounds?: number } | null;
   const playerScore = state?.score ?? 3200;
   const totalRounds = state?.rounds ?? 10;
 

@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import GlassCard from "@/components/ui/GlassCard";
+import { apiUrl } from "@/lib/api";
 
-const API_BASE_URL = "https://porchify-api.onrender.com";
 
 export interface GameNode {
   id: string;
@@ -51,8 +51,8 @@ const MusicRace = () => {
 
       // 3. Buscamos sus perfiles exactos en la API
       const [res1, res2] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(artist1)}&type=artist`),
-        fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(artist2)}&type=artist`)
+        fetch(apiUrl("search", { q: artist1, type: "artist" })),
+        fetch(apiUrl("search", { q: artist2, type: "artist" }))
       ]);
 
       const data1 = await res1.json();
@@ -87,7 +87,7 @@ const MusicRace = () => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
     try {
-      const res = await fetch(`${API_BASE_URL}/api/search?q=${encodeURIComponent(searchQuery)}&type=${searchType}`);
+      const res = await fetch(apiUrl("search", { q: searchQuery, type: searchType }));
       const data = await res.json();
       setSearchResults(data);
     } catch (err) {

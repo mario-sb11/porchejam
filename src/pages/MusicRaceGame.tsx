@@ -5,8 +5,8 @@ import { ArrowLeft, Trophy, Clock, Route, Disc, Users, Music } from "lucide-reac
 import { Button } from "@/components/ui/button";
 import GlassCard from "@/components/ui/GlassCard";
 import { GameNode } from "./MusicRace";
+import { apiUrl } from "@/lib/api";
 
-const API_BASE_URL = "https://porchify-api.onrender.com";
 
 interface ConnectionGroup {
   title: string;
@@ -53,7 +53,7 @@ const MusicRaceGame = () => {
     const fetchConnections = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/race/connections?id=${currentNode.id}&type=${currentNode.type}`);
+        const res = await fetch(apiUrl("race/connections", { id: currentNode.id, type: currentNode.type }));
         const data = await res.json();
         setConnectionGroups(data.options || []);
       } catch (error) {

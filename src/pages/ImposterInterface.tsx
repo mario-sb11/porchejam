@@ -1,15 +1,23 @@
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Ghost, Fingerprint, Eye, Skull, Volume2, Users, Infinity, PartyPopper, Loader2 } from "lucide-react";
+import { ArrowLeft, Ghost, Fingerprint, Eye, Skull, Volume2, Users, Infinity as InfinityIcon, PartyPopper, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 
 import MusicVisualizer from "@/components/MusicVisualizer";
+import { apiUrl } from "@/lib/api";
 
-const API_BASE_URL = import.meta.env.DEV ? "/api" : "https://porchify-api.onrender.com/api";
 
 // Helper para mezclar arrays aleatoriamente
-const shuffleArray = (array: any[]) => [...array].sort(() => Math.random() - 0.5);
+// Fisher-Yates: mezcla uniforme (sort con random sesga el orden)
+const shuffleArray = <T,>(array: T[]): T[] => {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+};
 
 interface Player {
   id: number;
@@ -71,7 +79,7 @@ const ImposterInterface = () => {
   // FASE 1: SETUP & FETCH TRACK
   // ==========================================
   useEffect(() => {
-    const storedPlayers = JSON.parse(localStorage.getItem("porchify_party_players") || "[]");
+    const storedPlayers = JSON.parse(localStorage.getItem("porchejam_party_players") || "[]");
     if (storedPlayers.length < 3) {
       navigate("/local-lobby");
       return;
@@ -83,9 +91,9 @@ const ImposterInterface = () => {
 
     const fetchRandomTrack = async () => {
       try {
-        const playType = localStorage.getItem("porchify_selected_type");
-        const singleId = localStorage.getItem("porchify_selected_playlist");
-        const mixItemsStr = localStorage.getItem("porchify_mix_items");
+        const playType = localStorage.getItem("porchejam_selected_type");
+        const singleId = localStorage.getItem("porchejam_selected_playlist");
+        const mixItemsStr = localStorage.getItem("porchejam_mix_items");
 
         if (!playType) throw new Error("No playlist selected");
 
@@ -98,12 +106,12 @@ const ImposterInterface = () => {
 
         const randomSource = sources[Math.floor(Math.random() * sources.length)];
         
-        let allTracks: any[] = [];
+        let allTracks: Track[] = [];
         const pagesToFetch = [0, 50, 100]; 
         
         await Promise.all(pagesToFetch.map(async (idx) => {
           try {
-            const res = await fetch(`${API_BASE_URL}/tracks?id=${randomSource.id}&type=${randomSource.type}&index=${idx}`);
+            const res = await fetch(apiUrl("tracks", { id: randomSource.id, type: randomSource.type, index: idx }));
             if (res.ok) {
               const data = await res.json();
               if (data.tracks && data.tracks.length > 0) {
@@ -115,7 +123,7 @@ const ImposterInterface = () => {
           }
         }));
 
-        const validTracks = allTracks.filter((t: any) => t.previewUrl);
+        const validTracks = allTracks.filter((t) => t.previewUrl);
 
         if (validTracks.length > 0) {
           const uniqueTracks = Array.from(new Map(validTracks.map(t => [t.id, t])).values());
@@ -131,8 +139,8 @@ const ImposterInterface = () => {
               // 1. INTENTO DE LETRA (LYRICS)
               if (initialClueType === "lyrics") {
                 try {
-                  const cleanTitle = selectedTrack.name.split(/[\(\-]/)[0].trim();
-                  const cleanArtist = selectedTrack.artist.split(/[\,\&]/)[0].trim();
+                  const cleanTitle = selectedTrack.name.split(/[(-]/)[0].trim();
+                  const cleanArtist = selectedTrack.artist.split(/[,&]/)[0].trim();
 
                   const res = await fetch(`https://api.lyrics.ovh/v1/${cleanArtist}/${cleanTitle}`);
                   if (!res.ok) throw new Error("Letra no encontrada");
@@ -159,7 +167,7 @@ const ImposterInterface = () => {
               // 2. INTENTO DE TAGS (DATAMUSE)
               if (initialClueType === "tags") {
                 try {
-                  const titleWords = selectedTrack.name.split(/[\s\(\)-]+/).filter((w: string) => w.length > 3);
+                  const titleWords = selectedTrack.name.split(/[\s()-]+/).filter((w: string) => w.length > 3);
                   const keyword = titleWords.length > 0 ? titleWords[0] : selectedTrack.artist.split(' ')[0];
                   const cleanKeyword = keyword.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ]/g, '');
 
@@ -169,14 +177,14 @@ const ImposterInterface = () => {
                   const cleanTitle = selectedTrack.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
                   const words = tagData
-                    .map((d: any) => d.word)
+                    .map((d: { word: string }) => d.word)
                     .filter((w: string) => {
                       const cleanW = w.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                       return w.length > 2 && !cleanTitle.includes(cleanW);
                     });
                   
                   if (words.length > 0) {
-                    const formatted = words.map((w: string) => w.charAt(0).toUpperCase() + w.slice(1));
+                    const formatted: string[] = words.map((w: string) => w.charAt(0).toUpperCase() + w.slice(1));
                     const numClues = Math.floor(Math.random() * 3) + 1; 
                     const maxWords = Math.min(words.length, numClues);
                     
@@ -290,7 +298,7 @@ const ImposterInterface = () => {
     setPhase("result");
 
     try {
-      const history = JSON.parse(localStorage.getItem("porchify_match_history") || "[]");
+      const history = JSON.parse(localStorage.getItem("porchejam_match_history") || "[]");
       const newMatch = {
         id: Date.now(),
         date: new Date().toLocaleDateString(),
@@ -307,15 +315,15 @@ const ImposterInterface = () => {
       
       history.unshift(newMatch);
       if (history.length > 20) history.pop();
-      localStorage.setItem("porchify_match_history", JSON.stringify(history));
+      localStorage.setItem("porchejam_match_history", JSON.stringify(history));
 
-      const partyGames = parseInt(localStorage.getItem("porchify_party_games") || "0");
-      localStorage.setItem("porchify_party_games", (partyGames + 1).toString());
+      const partyGames = parseInt(localStorage.getItem("porchejam_party_games") || "0");
+      localStorage.setItem("porchejam_party_games", (partyGames + 1).toString());
 
-      const tally = JSON.parse(localStorage.getItem("porchify_mode_tally") || "{}");
+      const tally = JSON.parse(localStorage.getItem("porchejam_mode_tally") || "{}");
       const favKey = `party-imposter-${revealMode}`;
       tally[favKey] = (tally[favKey] || 0) + 1;
-      localStorage.setItem("porchify_mode_tally", JSON.stringify(tally));
+      localStorage.setItem("porchejam_mode_tally", JSON.stringify(tally));
 
     } catch (e) {
       console.error("Error guardando estadísticas", e);
@@ -470,7 +478,7 @@ const ImposterInterface = () => {
                 />
               </svg>
               <div className="absolute z-10 text-5xl font-display font-black text-white">
-                {debateTime === 0 ? <Infinity className="w-16 h-16 text-orange-500 mx-auto" /> : `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`}
+                {debateTime === 0 ? <InfinityIcon className="w-16 h-16 text-orange-500 mx-auto" /> : `${Math.floor(timeLeft / 60)}:${(timeLeft % 60).toString().padStart(2, '0')}`}
               </div>
             </div>
 
