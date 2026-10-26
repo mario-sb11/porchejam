@@ -20,7 +20,7 @@ const SOURCES: Record<Exclude<DailyCategory, "comodin">, string[]> = {
   espanol: ["1116190041"], // Top Spain (oficial de Deezer)
   global: ["3155776842"], // Top Worldwide (oficial de Deezer)
   reggaeton: ["1273315391", "789123393"], // Reggaeton Hits + Reggaeton Classics
-  clasicos: ["8948895482", "7708767222", "14172614021"], // 80-90 pop español, latinos 90-2010, hits por año
+  clasicos: ["8948895482", "7708767222"], // pop español 80-90 y éxitos latinos 90-2010
 };
 
 export function sourcesFor(category: DailyCategory): string[] {
@@ -80,7 +80,8 @@ async function loadPool(category: DailyCategory): Promise<DailyTrack[]> {
 
   const pages = await Promise.all(
     sourcesFor(category).flatMap((playlistId) =>
-      [0, 50].map((index) => listOrEmpty(deezerGet<DzList<DzTrack>>(`/playlist/${playlistId}/tracks`, { limit: 50, index }))),
+      // Solo las 50 primeras de cada lista: en las de éxitos son las más conocidas.
+      [0].map((index) => listOrEmpty(deezerGet<DzList<DzTrack>>(`/playlist/${playlistId}/tracks`, { limit: 50, index }))),
     ),
   );
 
