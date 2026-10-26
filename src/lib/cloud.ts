@@ -7,6 +7,7 @@ import {
   readGuestSnapshot,
   recordMatchLocally,
   type CloudStats,
+  type GuestSnapshot,
   type MatchInput,
   type MatchOutcome,
   type MatchRecord,
@@ -48,8 +49,27 @@ async function pullStatsIntoLocal(userId: string): Promise<void> {
   }
 }
 
+function readLocal(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
 /**
- * Tras iniciar sesión: sube una sola vez el progreso de invitado, descarga el de la cuenta y
+ * ¿Hay que subir el progreso del navegador a la cuenta?
+ * Solo si es progreso de invitado (no pertenece a ninguna cuenta) y, o bien es la primera vez
+ * que se entra en la cuenta, o bien se ha jugado algo como invitado que no se debe perder.
+ * Si el progreso ya es de otra cuenta, nunca se mezcla.
+ */
+export function shouldImportGuest(isGuestBrowser: boolean, firstLogin: boolean, guest: GuestSnapshot): boolean {
+  if (!isGuestBrowser) return false;
+  return firstLogin || guest.soloGames + guest.partyGames > 0;
+}
+
+/**
+ * Tras iniciar sesión: suma el progreso de invitado de este navegador, descarga el de la cuenta y
  * deja el perfil en el navegador para que todas las pantallas lo lean como siempre.
  */
 export async function syncAfterLogin(user: User): Promise<Profile | null> {
@@ -58,9 +78,12 @@ export async function syncAfterLogin(user: User): Promise<Profile | null> {
   const { data: profile } = await supabase.from("profiles").select("id, username, avatar").eq("id", user.id).maybeSingle();
   const { data: stats } = await supabase.from("player_stats").select("guest_imported_at").eq("user_id", user.id).maybeSingle();
 
-  if (stats && !stats.guest_imported_at) {
-    const guest = readGuestSnapshot();
-    await supabase.rpc("import_guest_stats", {
+  const firstLogin = Boolean(stats && !stats.guest_imported_at);
+  const guest = readGuestSnapshot();
+  const isGuestBrowser = readLocal(STORAGE_KEYS.account) === null;
+
+  if (stats && shouldImportGuest(isGuestBrowser, firstLogin, guest)) {
+    const { error } = await supabase.rpc("import_guest_stats", {
       p_high_score: guest.highScore,
       p_solo_games: guest.soloGames,
       p_party_games: guest.partyGames,
@@ -69,7 +92,10 @@ export async function syncAfterLogin(user: User): Promise<Profile | null> {
       p_mode_tally: guest.modeTally,
       p_matches: guest.matches,
     });
+    if (error) console.warn("[cuenta] No se pudo sumar el progreso de invitado:", error.message);
+  }
 
+  if (firstLogin && isGuestBrowser) {
     // Si como invitado ya había elegido avatar, se conserva en la cuenta.
     const localAvatar = localStorage.getItem(STORAGE_KEYS.avatar);
     if (profile && profile.avatar === "default" && localAvatar && localAvatar !== "default") {
@@ -87,6 +113,8 @@ export async function syncAfterLogin(user: User): Promise<Profile | null> {
   }
 
   await pullStatsIntoLocal(user.id);
+  // A partir de aquí el progreso del navegador es el de esta cuenta, no de invitado.
+  setLocal(STORAGE_KEYS.account, user.id);
 
   if (profile) {
     setLocal(STORAGE_KEYS.username, profile.username);

@@ -38,6 +38,9 @@ export function AuthProviderRoot({ children }: { children: ReactNode }) {
       if (!active) return;
       setSession(next);
       if (!next) {
+        // Sesión cerrada desde otra pestaña o caducada: el progreso ya está en la cuenta y no
+        // debe quedarse mezclado con lo que se juegue después como invitado.
+        if (syncedUserId.current) clearLocalProgress();
         syncedUserId.current = null;
         setProfile(null);
         setLoading(false);

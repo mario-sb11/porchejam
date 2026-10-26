@@ -128,7 +128,10 @@ const GameInterface = () => {
     const singleId = localStorage.getItem("porchejam_selected_playlist");
     const mixItemsStr = localStorage.getItem("porchejam_mix_items");
 
-    if (!playType) return navigate("/playlists");
+    if (!playType) {
+      navigate("/playlists");
+      return;
+    }
 
     let sources: {id: string, type: string}[] = [];
     if (playType === "mix" && mixItemsStr) {

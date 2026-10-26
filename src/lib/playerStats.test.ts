@@ -97,3 +97,30 @@ describe("nombre público", () => {
     expect(isValidUsername("<script>")).toBe(false);
   });
 });
+
+describe("progreso de invitado al iniciar sesión", () => {
+  const guest = (games: number) => ({ ...readGuestSnapshot(), soloGames: games });
+
+  it("la primera vez siempre se sube, aunque no haya partidas", async () => {
+    const { shouldImportGuest } = await import("./cloud");
+    expect(shouldImportGuest(true, true, guest(0))).toBe(true);
+  });
+
+  it("en una cuenta que ya existía se suman las partidas jugadas como invitado", async () => {
+    const { shouldImportGuest } = await import("./cloud");
+    expect(shouldImportGuest(true, false, guest(3))).toBe(true);
+    expect(shouldImportGuest(true, false, guest(0))).toBe(false);
+  });
+
+  it("nunca se vuelve a subir el progreso que ya es de una cuenta", async () => {
+    const { shouldImportGuest } = await import("./cloud");
+    expect(shouldImportGuest(false, false, guest(10))).toBe(false);
+    expect(shouldImportGuest(false, true, guest(10))).toBe(false);
+  });
+
+  it("cerrar sesión deja el navegador como invitado", () => {
+    localStorage.setItem(STORAGE_KEYS.account, "user-a");
+    clearLocalProgress();
+    expect(localStorage.getItem(STORAGE_KEYS.account)).toBeNull();
+  });
+});

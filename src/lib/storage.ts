@@ -23,6 +23,8 @@ export const STORAGE_KEYS = {
   modeTally: "porchejam_mode_tally",
   matchHistory: "porchejam_match_history",
   bombsSuffered: "porchejam_bombs_suffered",
+  /** Cuenta a la que pertenece el progreso guardado; si falta, el progreso es de invitado. */
+  account: "porchejam_account",
 } as const;
 
 /** El navegador puede bloquear localStorage (modo privado, permisos): nunca debe romper la app. */

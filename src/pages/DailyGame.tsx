@@ -48,6 +48,7 @@ const DailyGameInner = ({ category }: { category: DailyCategoryId }) => {
   const [checking, setChecking] = useState(false);
 
   const [playing, setPlaying] = useState(false);
+  const [audioNotice, setAudioNotice] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const stopTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -100,6 +101,7 @@ const DailyGameInner = ({ category }: { category: DailyCategoryId }) => {
     audio
       .play()
       .then(() => {
+        setAudioNotice(null);
         setPlaying(true);
         setElapsed(0);
         const started = performance.now();
@@ -107,8 +109,9 @@ const DailyGameInner = ({ category }: { category: DailyCategoryId }) => {
         stopTimerRef.current = setTimeout(stopAudio, allowedSeconds * 1000);
       })
       .catch(() => {
-        // La URL del audio caduca: si falla, se pide un reto fresco.
+        // La URL del audio caduca: si falla, se pide un reto fresco y se avisa para volver a pulsar.
         audioRef.current = null;
+        setAudioNotice("No se pudo reproducir el audio. Pulsa de nuevo para reintentarlo.");
         loadPuzzle();
       });
   };
@@ -244,7 +247,9 @@ const DailyGameInner = ({ category }: { category: DailyCategoryId }) => {
             </Button>
             <span>0:{String(TOTAL_SECONDS).padStart(2, "0")}</span>
           </div>
-          <p className="text-center text-xs text-muted-foreground">Ahora puedes escuchar {allowedSeconds} {allowedSeconds === 1 ? "segundo" : "segundos"}</p>
+          <p className="text-center text-xs text-muted-foreground" role="status">
+            {audioNotice ?? `Ahora puedes escuchar ${allowedSeconds} ${allowedSeconds === 1 ? "segundo" : "segundos"}`}
+          </p>
         </div>
 
         {/* Buscador */}

@@ -177,6 +177,8 @@ export function applyCloudStats(stats: CloudStats, matches?: MatchRecord[]): voi
 }
 
 /** Datos locales de invitado listos para importarse a una cuenta nueva. */
+export type GuestSnapshot = ReturnType<typeof readGuestSnapshot>;
+
 export function readGuestSnapshot() {
   return {
     highScore: readNumber(STORAGE_KEYS.highScore),
@@ -202,6 +204,7 @@ export function clearLocalProgress(): void {
     STORAGE_KEYS.bombsSuffered,
     STORAGE_KEYS.username,
     STORAGE_KEYS.avatar,
+    STORAGE_KEYS.account,
   ]) {
     try {
       localStorage.removeItem(key);
