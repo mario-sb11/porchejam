@@ -30,6 +30,7 @@ const Terms = lazy(() => import("./pages/Terms"));
 const LegalNotice = lazy(() => import("./pages/LegalNotice"));
 const MusicRace = lazy(() => import("./pages/MusicRace"));
 const MusicRaceGame = lazy(() => import("./pages/MusicRaceGame"));
+const Support = lazy(() => import("./pages/Support"));
 
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
               <Route path="/legal" element={<LegalNotice />} />
               <Route path="/music-race" element={<MusicRace />} />
               <Route path="/music-race-game" element={<MusicRaceGame />} />
+              <Route path="/apoyar" element={<Support />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             </Suspense>

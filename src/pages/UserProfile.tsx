@@ -31,7 +31,9 @@ const UserProfile = () => {
   const [currentAvatar, setCurrentAvatar] = useState("default");
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => readPlayerStats());
-  const { session, profile, accountsEnabled, loading: authLoading, signOut } = useAuth();
+  const { session, profile, accountsEnabled, loading: authLoading, signOut, deleteAccount } = useAuth();
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("porchejam_username");
@@ -67,6 +69,16 @@ const UserProfile = () => {
       localStorage.removeItem("porchejam_username");
     }
     navigate("/");
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleteError(null);
+    try {
+      await deleteAccount();
+      navigate("/");
+    } catch {
+      setDeleteError("No se pudo borrar la cuenta. Inténtalo de nuevo en unos minutos.");
+    }
   };
 
   const selectAvatar = (avatar: string) => {
@@ -197,6 +209,26 @@ const UserProfile = () => {
             <LogOut className="w-4 h-4 mr-2" /> Cerrar sesión
           </Button>
         </motion.div>
+
+        {/* Borrar cuenta (derecho de supresión) */}
+        {session && (
+          <div className="mt-10 border-t border-white/10 pt-6 text-center">
+            {!confirmDelete ? (
+              <button type="button" onClick={() => setConfirmDelete(true)} className="text-xs text-muted-foreground underline hover:text-destructive">
+                Borrar mi cuenta y todos mis datos
+              </button>
+            ) : (
+              <div className="glass rounded-xl p-4">
+                <p className="text-sm text-foreground mb-3">Se borrarán tu cuenta, tus estadísticas y tu historial para siempre. ¿Seguro?</p>
+                <div className="flex justify-center gap-2">
+                  <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>Cancelar</Button>
+                  <Button variant="destructive" size="sm" onClick={handleDeleteAccount}>Sí, borrar todo</Button>
+                </div>
+                {deleteError && <p role="alert" className="text-xs text-destructive mt-2">{deleteError}</p>}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* MODAL PARA CAMBIAR AVATAR */}

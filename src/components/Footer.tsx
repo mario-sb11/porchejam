@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { donationUrl } from "@/lib/donations";
 
 const deezerBars = [
   "h-2",
@@ -26,7 +27,7 @@ const Footer = () => {
             ))}
           </span>
         </div>
-        <nav className="flex items-center gap-4">
+        <nav className="flex flex-wrap items-center gap-4">
           <Link to="/privacy" className="transition-colors hover:text-zinc-200">
             Privacidad
           </Link>
@@ -36,6 +37,11 @@ const Footer = () => {
           <Link to="/legal" className="transition-colors hover:text-zinc-200">
             Aviso Legal
           </Link>
+          {donationUrl && (
+            <Link to="/apoyar" className="font-semibold text-primary transition-colors hover:text-primary/80">
+              Apóyanos ☕
+            </Link>
+          )}
         </nav>
       </div>
     </footer>
