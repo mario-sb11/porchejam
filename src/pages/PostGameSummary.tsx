@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Trophy, Target, Flame, Medal, Crown, Bomb, Skull, Settings, Music } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { recordMatch } from "@/lib/cloud";
 
 const podiumColors = [
   "from-yellow-400 to-yellow-600",
@@ -64,83 +65,42 @@ const PostGameSummary = () => {
   const loser = isHotPotato ? rankedPlayers.find(p => p.id === loserId) : null;
   const survivors = isHotPotato ? rankedPlayers.filter(p => p.id !== loserId) : [];
 
-  //  EL CEREBRO CONTABLE
+  // Guarda la partida una sola vez: en el navegador y, con cuenta, también en la nube.
   useEffect(() => {
     if (hasSavedData.current) return;
     hasSavedData.current = true;
 
-    // 1. Récord Global (Solo)
-    let myScore = score;
-    if (mode === "solo") {
-      const savedHighScore = parseInt(localStorage.getItem("porchejam_high_score") || "0");
-      setHighScore(Math.max(savedHighScore, score));
-      
-      if (score > savedHighScore && score > 0) {
-        setIsNewRecord(true);
-        localStorage.setItem("porchejam_high_score", score.toString());
-        setHighScore(score);
-      }
-    } else {
-      myScore = rankedPlayers.length > 0 ? rankedPlayers[0].score : 0;
-    }
-
-    // 2. Contadores Categorizados
-    if (mode === "solo") {
-      const currentSoloGames = parseInt(localStorage.getItem("porchejam_solo_games") || "0");
-      localStorage.setItem("porchejam_solo_games", (currentSoloGames + 1).toString());
-      
-      const currentTotalCorrect = parseInt(localStorage.getItem("porchejam_total_correct") || "0");
-      const currentTotalRounds = parseInt(localStorage.getItem("porchejam_total_rounds") || "0");
-      localStorage.setItem("porchejam_total_correct", (currentTotalCorrect + correctGuesses).toString());
-      localStorage.setItem("porchejam_total_rounds", (currentTotalRounds + roundsPlayed).toString());
-    } else {
-      const currentPartyGames = parseInt(localStorage.getItem("porchejam_party_games") || "0");
-      localStorage.setItem("porchejam_party_games", (currentPartyGames + 1).toString());
-    }
-
-    // Historial del modo más jugado
-    const currentModeTallyStr = localStorage.getItem("porchejam_mode_tally") || "{}";
-    const currentModeTally = JSON.parse(currentModeTallyStr);
-    const modeKey = `${mode}-${specialMode}`;
-    currentModeTally[modeKey] = (currentModeTally[modeKey] || 0) + 1;
-    localStorage.setItem("porchejam_mode_tally", JSON.stringify(currentModeTally));
-
-    // 3. Bombas Sufridas
-    if (mode === "solo" && specialMode === "contrarreloj" && loserId) {
-      const currentBombs = parseInt(localStorage.getItem("porchejam_bombs_suffered") || "0");
-      localStorage.setItem("porchejam_bombs_suffered", (currentBombs + 1).toString());
-    }
-
-    // 4. Historial Interactivo
+    const myScore = mode === "solo" ? score : (rankedPlayers[0]?.score ?? 0);
     const playlistName = localStorage.getItem("porchejam_selected_playlist_name") || "Mix Aleatorio";
     const playType = localStorage.getItem("porchejam_selected_type") || "playlist";
     const coverEmoji = playType === "artist" ? "🎤" : (playType === "mix" ? "⚔️" : "🎵");
-    
     const specialModeNames: Record<string, string> = {
       normal: "Normal", contrarreloj: "Patata Caliente", inverso: "Inverso", survival: "Supervivencia"
     };
 
-    const newMatch = {
-      id: Date.now(),
-      playlist: playlistName,
-      score: mode === "solo" ? `${myScore.toLocaleString()} pts` : (isHotPotato && loser ? `💥 ${loser.name}` : `🏆 ${rankedPlayers[0]?.name}`),
-      date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }),
-      cover: coverEmoji,
-      mode: mode, 
-      specialMode: specialModeNames[specialMode] || "Desconocido",
-      accuracy: `${correctGuesses}/${roundsPlayed}`,
-      topPlayers: mode === "party" ? rankedPlayers.slice(0, 3).map(p => ({ name: p.name, emoji: p.emoji, score: p.score })) : null
-    };
+    const outcome = recordMatch({
+      mode: mode === "party" ? "party" : "solo",
+      modeKey: `${mode}-${specialMode}`,
+      score: myScore,
+      correct: correctGuesses,
+      rounds: roundsPlayed,
+      bombSuffered: mode === "solo" && specialMode === "contrarreloj" && Boolean(loserId),
+      record: {
+        playlist: playlistName,
+        score: mode === "solo" ? `${myScore.toLocaleString()} pts` : (isHotPotato && loser ? `💥 ${loser.name}` : `🏆 ${rankedPlayers[0]?.name}`),
+        cover: coverEmoji,
+        mode,
+        specialMode: specialModeNames[specialMode] || "Desconocido",
+        accuracy: `${correctGuesses}/${roundsPlayed}`,
+        topPlayers: mode === "party" ? rankedPlayers.slice(0, 3).map(p => ({ name: p.name, emoji: p.emoji, score: p.score })) : null,
+      },
+    });
 
-    const historyData = localStorage.getItem("porchejam_match_history");
-    let matchHistory = historyData ? JSON.parse(historyData) : [];
-    
-    matchHistory.unshift(newMatch);
-    if (matchHistory.length > 10) matchHistory = matchHistory.slice(0, 10); 
-    
-    localStorage.setItem("porchejam_match_history", JSON.stringify(matchHistory));
-
-  }, [mode, score, specialMode, correctGuesses, roundsPlayed, loserId, partyScores, partyPlayers.length, rankedPlayers, isHotPotato, loser]);
+    if (mode === "solo") {
+      setHighScore(outcome.highScore);
+      setIsNewRecord(outcome.isNewRecord);
+    }
+  }, [mode, score, specialMode, correctGuesses, roundsPlayed, loserId, rankedPlayers, isHotPotato, loser]);
 
   const top3 = rankedPlayers.slice(0, 3);
   const rest = rankedPlayers.slice(3);

@@ -22,6 +22,7 @@ export const STORAGE_KEYS = {
   totalRounds: "porchejam_total_rounds",
   modeTally: "porchejam_mode_tally",
   matchHistory: "porchejam_match_history",
+  bombsSuffered: "porchejam_bombs_suffered",
 } as const;
 
 /** El navegador puede bloquear localStorage (modo privado, permisos): nunca debe romper la app. */

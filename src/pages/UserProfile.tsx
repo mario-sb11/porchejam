@@ -5,6 +5,9 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { readPlayerStats, type PlayerStats } from "@/lib/playerStats";
+import { updateAvatar } from "@/lib/cloud";
+import { useAuth } from "@/contexts/AuthContext";
+import SignInOptions from "@/components/SignInOptions";
 
 // Lista de avatares gratuitos (emojis + personas de Dicebear)
 const FREE_AVATARS = [
@@ -28,6 +31,7 @@ const UserProfile = () => {
   const [currentAvatar, setCurrentAvatar] = useState("default");
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [playerStats, setPlayerStats] = useState<PlayerStats>(() => readPlayerStats());
+  const { session, profile, accountsEnabled, loading: authLoading, signOut } = useAuth();
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("porchejam_username");
@@ -43,8 +47,9 @@ const UserProfile = () => {
     }
 
     // Estadísticas reales guardadas por la pantalla de resumen de cada partida
+    // (con cuenta, ya sincronizadas desde la nube)
     setPlayerStats(readPlayerStats());
-  }, [navigate]);
+  }, [navigate, profile, authLoading]);
 
   const gameHistory = playerStats.recentMatches;
   const stats = [
@@ -55,14 +60,18 @@ const UserProfile = () => {
     { icon: Flame, label: "Precisión", value: playerStats.accuracy === null ? "—" : `${playerStats.accuracy}%`, color: "text-accent" },
   ];
 
-  const handleLogout = () => {
-    localStorage.removeItem("porchejam_username");
+  const handleLogout = async () => {
+    if (session) {
+      await signOut(); // también borra el progreso de este navegador
+    } else {
+      localStorage.removeItem("porchejam_username");
+    }
     navigate("/");
   };
 
   const selectAvatar = (avatar: string) => {
     setCurrentAvatar(avatar);
-    localStorage.setItem("porchejam_avatar", avatar);
+    void updateAvatar(avatar);
     setIsAvatarModalOpen(false);
   };
 
@@ -100,9 +109,6 @@ const UserProfile = () => {
             <h1 className="text-3xl font-display font-bold text-foreground">Mi Perfil</h1>
           </div>
           
-          <div className="bg-yellow-500/20 border border-yellow-500/50 px-4 py-1.5 rounded-full flex items-center gap-2 shadow-[0_0_15px_rgba(234,179,8,0.2)]">
-            <span className="text-yellow-400 font-bold">🪙 0</span>
-          </div>
         </motion.div>
 
         {/* Avatar + name */}
@@ -123,9 +129,18 @@ const UserProfile = () => {
 
           <h2 className="text-2xl font-display font-bold text-foreground">{username}</h2>
           <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-            <User className="w-3 h-3" /> Invitado en PorcheJam
+            <User className="w-3 h-3" /> {session ? `Cuenta: ${session.user.email ?? "conectada"}` : "Invitado en PorcheJam"}
           </p>
         </motion.div>
+
+        {/* Invitado: ofrecer guardar el progreso en una cuenta */}
+        {!session && accountsEnabled && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="glass rounded-2xl p-5 mb-10 text-center">
+            <h3 className="font-display font-bold text-foreground mb-1">Guarda tu progreso</h3>
+            <p className="text-sm text-muted-foreground mb-4">Crea tu cuenta y tus estadísticas te seguirán en cualquier dispositivo. Lo que ya has jugado se conserva.</p>
+            <SignInOptions />
+          </motion.div>
+        )}
 
         {/* Stats grid */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="grid grid-cols-3 md:grid-cols-5 gap-3 mb-10">
@@ -160,7 +175,7 @@ const UserProfile = () => {
                       {game.cover} {game.playlist} <span className="text-primary opacity-80">· {game.mode === "solo" ? "Solitario" : "Fiesta"} {game.specialMode}</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {game.date} · <span className="text-white/80">{game.accuracy} aciertos</span>
+                      {game.date}{game.accuracy ? <> · <span className="text-white/80">{game.accuracy} aciertos</span></> : null}
                     </div>
                   </div>
                   <div className="text-lg font-display font-bold text-primary">{game.score}</div>

@@ -50,7 +50,11 @@ Navegador (React)  ──►  /api/* (Vercel Functions)  ──►  api.deezer.c
 | `GET /api/race/connections?id=&type=artist\|track\|album` | Conexiones para Music Race |
 | `GET /api/preview?id=` | Renueva la URL de una preview (Deezer las firma con ~15 min de validez) |
 
-El progreso del jugador invitado se guarda en el navegador (`localStorage`, claves `porchejam_*`).
+### Cuentas y progreso
+
+* **Invitado:** el progreso se guarda en el navegador (`localStorage`, claves `porchejam_*`).
+* **Con cuenta (Supabase):** login con Google, perfil público y estadísticas privadas en PostgreSQL con RLS. El progreso de invitado se importa una vez al crear la cuenta. Ver [docs/configurar-cuentas.md](docs/configurar-cuentas.md).
+* Las cuentas son opcionales: sin las variables de entorno (`.env.example`) la app funciona en modo invitado.
 
 ### Seguridad
 
