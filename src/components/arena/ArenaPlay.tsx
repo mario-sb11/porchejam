@@ -115,6 +115,9 @@ const ArenaPlay = ({ state, serverNow, needsTap, onTapToPlay, muted, onToggleMut
                 <p className="text-muted-foreground truncate">{reveal.artist}</p>
               </div>
             </GlassCard>
+            <p className={cn("text-center font-semibold", mine?.correct ? "text-primary" : "text-muted-foreground")} aria-live="polite">
+              {mine?.correct ? `¡Acertaste! +${mine.points} puntos` : mine ? "Esta vez no ha habido suerte" : "No has respondido a tiempo"}
+            </p>
             <RoundRanking state={state} />
             <p className="text-center text-sm text-muted-foreground">
               {roundNumber < room.settings.rounds ? "Siguiente canción en unos segundos..." : "¡Última ronda! Calculando el podio..."}
@@ -217,7 +220,17 @@ const TextAnswer = ({
       setSearching(true);
       try {
         const res = await fetch(apiUrl("search", { q, type: "track" }), { signal: controller.signal });
-        if (res.ok) setResults(((await res.json()) as SearchResult[]).slice(0, 5));
+        if (res.ok) {
+          // Sin repetidos (la misma canción suele aparecer varias veces en Deezer).
+          const seen = new Set<string>();
+          const unique = ((await res.json()) as SearchResult[]).filter((r) => {
+            const key = `${r.name.toLowerCase()}|${r.artistName.toLowerCase()}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setResults(unique.slice(0, 4));
+        }
       } catch {
         /* cancelada o sin red */
       } finally {
@@ -269,7 +282,7 @@ const TextAnswer = ({
           {sending || searching ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
         </button>
         {mode === "medio" && results.length > 0 && (
-          <ul className="absolute bottom-16 left-0 w-full glass-strong rounded-xl overflow-hidden z-20" role="listbox">
+          <ul className="absolute bottom-16 left-0 w-full glass-strong rounded-xl overflow-y-auto max-h-56 z-20" role="listbox">
             {results.map((r) => (
               <li key={r.id}>
                 <button type="button" onClick={() => submit(r.name)} className="w-full p-3 text-left hover:bg-primary/20 border-b border-white/5">

@@ -73,7 +73,15 @@ const GameInterface = () => {
     partyLivesRef.current = partyLives;
   }, [partyLives]);
 
-  const currentPlayer = isPartyMode && partyPlayers.length > 0 ? partyPlayers[activePlayerIndex] : null;
+  // ZUMBADORES: todos escuchan a la vez y responde quien pulse antes su nombre.
+  const isBuzzer = isPartyMode && partyType === "buzzer" && !isHotPotato;
+  const [buzzerId, setBuzzerId] = useState<number | null>(null);
+  const [lockedOut, setLockedOut] = useState<number[]>([]);
+  const [wrongOptionIds, setWrongOptionIds] = useState<string[]>([]);
+
+  const currentPlayer = isBuzzer
+    ? partyPlayers.find((p) => p.id === buzzerId) ?? null
+    : isPartyMode && partyPlayers.length > 0 ? partyPlayers[activePlayerIndex] : null;
 
   const maxTurns = isPartyMode && partyType === "turns" && specialMode !== "survival" && !isHotPotato
     ? totalRounds * Math.max(partyPlayers.length, 1) 
@@ -281,6 +289,9 @@ const GameInterface = () => {
     setRoundResult(null);
     setGuess("");
     setWrongAttempts(0);
+    setBuzzerId(null);
+    setLockedOut([]);
+    setWrongOptionIds([]);
     setIsPlaying(false);
     setTimeRemaining(isHotPotato ? 30 : (specialMode === "contrarreloj" ? 30 : configTime));
 
@@ -451,6 +462,27 @@ const GameInterface = () => {
       setRoundResult("correct");
       setIsPlaying(false);
       setTimeout(nextTurn, isHotPotato ? 800 : 3500);
+    } else if (isBuzzer && currentPlayer) {
+      // Zumbadores: quien falla se queda fuera de esta ronda y el resto puede intentarlo.
+      triggerPenaltyShake();
+      setGuess("");
+      if (answerMode === "facil") setWrongOptionIds((ids) => [...ids, answerIdOrText]);
+      if (specialMode === "survival") {
+        setPartyLives(prev => ({ ...prev, [currentPlayer.id]: prev[currentPlayer.id] - 1 }));
+      }
+      const nextLocked = [...lockedOut, currentPlayer.id];
+      setLockedOut(nextLocked);
+      setBuzzerId(null);
+      const stillIn = partyPlayers.filter(p => !nextLocked.includes(p.id) && (specialMode !== "survival" || (partyLivesRef.current[p.id] ?? 1) > 0));
+      if (stillIn.length === 0 || (answerMode === "facil" && wrongOptionIds.length + 1 >= 3)) {
+        clearInterval(timerRef.current);
+        stopAllAudio();
+        setIsPlaying(false);
+        setPopScore(0);
+        setPopKey((k) => k + 1);
+        setRoundResult("wrong");
+        setTimeout(nextTurn, 3000);
+      }
     } else {
       setWrongAttempts((w) => w + 1);
       triggerPenaltyShake();
@@ -479,7 +511,7 @@ const GameInterface = () => {
         setGuess("");
       }
     }
-  }, [currentTrack, roundResult, timeRemaining, configTime, wrongAttempts, answerMode, specialMode, isPartyMode, currentPlayer, isHotPotato, stopAllAudio, nextTurn]);
+  }, [currentTrack, roundResult, timeRemaining, configTime, wrongAttempts, answerMode, specialMode, isPartyMode, currentPlayer, isHotPotato, stopAllAudio, nextTurn, isBuzzer, lockedOut, partyPlayers, wrongOptionIds]);
 
   useEffect(() => {
     return stopAllAudio;
@@ -520,12 +552,37 @@ const GameInterface = () => {
         </motion.div>
       )}
 
-      {isPartyMode && partyType === "buzzer" && !roundResult && (
+      {isBuzzer && !roundResult && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto w-full mb-3">
-          <div className="glass-strong rounded-xl px-4 py-2 flex items-center justify-center gap-2 glow-magenta">
-            <Zap className="w-4 h-4 text-accent" />
-            <span className="font-display font-bold text-accent">¡El más rápido gana!</span>
-          </div>
+          {currentPlayer ? (
+            <div className="glass-strong rounded-xl px-4 py-2 flex items-center justify-center gap-2 glow-magenta" aria-live="assertive">
+              <span className="text-xl">{currentPlayer.emoji}</span>
+              <span className="font-display font-bold text-accent">¡Responde {currentPlayer.name}!</span>
+              <button type="button" onClick={() => setBuzzerId(null)} className="ml-2 text-xs underline text-muted-foreground">Me he equivocado</button>
+            </div>
+          ) : (
+            <div className="glass-strong rounded-xl p-3">
+              <p className="text-center text-xs uppercase tracking-wider text-accent font-bold mb-2 flex items-center justify-center gap-1">
+                <Zap className="w-3.5 h-3.5" /> ¿Quién la sabe? Pulsa tu nombre
+              </p>
+              <div className="flex flex-wrap justify-center gap-2">
+                {partyPlayers.map((p) => {
+                  const out = lockedOut.includes(p.id) || (specialMode === "survival" && (partyLives[p.id] ?? 1) <= 0);
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      disabled={out}
+                      onClick={() => setBuzzerId(p.id)}
+                      className="px-4 py-2 rounded-full bg-accent/20 border border-accent/40 font-bold text-sm hover:bg-accent/40 active:scale-95 transition disabled:opacity-30 disabled:line-through"
+                    >
+                      {p.emoji} {p.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
 
@@ -611,7 +668,7 @@ const GameInterface = () => {
                 let btnClass = "glass hover:bg-white/10";
                 if (roundResult) btnClass = track.id === currentTrack.id ? "bg-primary text-black glow-green opacity-100" : "glass opacity-30";
                 return (
-                  <Button key={track.id} variant="outline" disabled={!!roundResult} onClick={() => handleGuess(track.id)}
+                  <Button key={track.id} variant="outline" disabled={!!roundResult || (isBuzzer && !currentPlayer) || wrongOptionIds.includes(track.id)} onClick={() => handleGuess(track.id)}
                     className={`h-auto min-h-[60px] py-3 flex flex-col border-white/10 ${btnClass}`}>
                     <span className="font-bold text-sm text-center leading-tight">{track.name}</span>
                     <span className="text-xs opacity-70 mt-1">{track.artist}</span>
@@ -624,7 +681,7 @@ const GameInterface = () => {
           {answerMode === "medio" && (
             <div className="relative">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input value={guess} onChange={(e) => setGuess(e.target.value)} disabled={!!roundResult}
+              <Input value={guess} onChange={(e) => setGuess(e.target.value)} disabled={!!roundResult || (isBuzzer && !currentPlayer)}
                 placeholder="Busca la canción..." className="pl-10 h-14 rounded-full glass border-0 text-base text-center" />
               {guess.length > 1 && !roundResult && (
                 <div className="absolute bottom-16 left-0 w-full glass rounded-xl overflow-hidden max-h-48 overflow-y-auto z-50">
@@ -641,7 +698,7 @@ const GameInterface = () => {
 
           {answerMode === "dificil" && (
             <Input value={guess} onChange={(e) => setGuess(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleGuess(guess)}
-              disabled={!!roundResult} placeholder="Escribe tu respuesta exacta..." className="h-14 rounded-full glass border-0 text-center font-bold text-lg" />
+              disabled={!!roundResult || (isBuzzer && !currentPlayer)} placeholder="Escribe tu respuesta exacta..." className="h-14 rounded-full glass border-0 text-center font-bold text-lg" />
           )}
         </motion.div>
 

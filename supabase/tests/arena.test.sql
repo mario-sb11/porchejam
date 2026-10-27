@@ -280,5 +280,29 @@ begin
   assert st -> 'current' ->> 'options' is null, 'sin opciones en modo texto';
 end $$;
 
+-- 13. Límite por conexión (IP de Cloudflare, guardada solo como HMAC)
+reset role;
+do $$ begin perform set_config('request.headers', '{"cf-connecting-ip": "203.0.113.7"}', true); end $$;
+set local role anon;
+do $$
+declare i int;
+begin
+  for i in 1..10 loop
+    perform public.arena_create('tokenIp' || i || '_iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii', 'Ip', 'default',
+      '{"rounds": 5, "seconds": 10, "answer": "facil"}', '{"sources": [{"id": "1", "type": "artist"}]}');
+  end loop;
+  begin
+    perform public.arena_create('tokenIpOtro_jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj', 'Ip', 'default',
+      '{"rounds": 5, "seconds": 10, "answer": "facil"}', '{"sources": [{"id": "1", "type": "artist"}]}');
+    assert false, 'límite por conexión';
+  exception when sqlstate 'P0001' then null; end;
+end $$;
+reset role;
+do $$
+begin
+  assert not exists (select 1 from arena_private.rooms where creator_ip_hash = sha256(convert_to('203.0.113.7', 'UTF8'))), 'la IP no se guarda con un hash simple';
+  assert (select count(distinct creator_ip_hash) from arena_private.rooms where creator_ip_hash is not null) = 1, 'mismo HMAC para la misma IP';
+end $$;
+
 rollback;
 \echo 'Arena: todas las pruebas OK'
