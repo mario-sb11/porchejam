@@ -1,9 +1,11 @@
 import { motion } from "framer-motion";
-import { User, Users, Globe, ArrowLeft, Gamepad2, Hammer } from "lucide-react";
+import { User, Users, Globe, ArrowLeft, Gamepad2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import GameButton from "@/components/ui/GameButton";
 import GlassCard from "@/components/ui/GlassCard";
-import { CHALLENGE_TYPES } from "@/data/mockData";
+import ChallengeCard from "@/components/ChallengeCard";
+import { CHALLENGES } from "@/data/challenges";
+import { arenaAvailable } from "@/lib/supabase";
 
 const modes = [
   {
@@ -12,7 +14,6 @@ const modes = [
     description: "Desafíate a ti mismo y supera tu récord",
     icon: User,
     color: "from-primary to-primary/60",
-    glowClass: "glow-green",
     route: "/settings?mode=solo",
   },
   {
@@ -21,45 +22,22 @@ const modes = [
     description: "Pasa el móvil y reta a tus amigos",
     icon: Users,
     color: "from-secondary to-secondary/60",
-    glowClass: "glow-purple",
     route: "/local-lobby",
   },
   {
     id: "arena",
     title: "Arena Online",
-    description: "Compite en tiempo real contra jugadores de todo el mundo",
+    description: "Crea una sala y jugad a la vez, cada uno desde su móvil",
     icon: Globe,
     color: "from-accent to-accent/60",
-    glowClass: "glow-magenta",
-    route: "/lobby",
-    comingSoon: true,
+    route: "/settings?mode=online",
+    // La Arena necesita la base de datos; sin ella se muestra como no disponible.
+    comingSoon: !arenaAvailable,
   },
 ];
 
 const GameModes = () => {
   const navigate = useNavigate();
-
-  // Filtramos e interceptamos los desafíos de mockData para inyectar "El Infiltrado"
-  // y marcar los que están en desarrollo.
-  const displayChallenges = CHALLENGE_TYPES.map(ch => {
-    if (ch.id === "5s" || ch.label.toLowerCase().includes("5 segundo")) {
-      return {
-        id: "impostor",
-        label: "El Infiltrado",
-        description: "Alguien no sabe la canción y debe disimular. ¡Descúbrelo!",
-        icon: "🕵️‍♂️",
-        isActive: true
-      };
-    }
-    
-    // 2. Comprobar si es el Fragmento Aleatorio (el único activo ahora mismo)
-    const isActive = ch.id === "fragment" || ch.id === "fragmento" || ch.label.toLowerCase().includes("aleatorio");
-    
-    return {
-      ...ch,
-      isActive
-    };
-  });
 
   return (
     <div className="min-h-screen gradient-bg px-4 py-8">
@@ -70,7 +48,7 @@ const GameModes = () => {
           animate={{ opacity: 1, y: 0 }}
           className="flex items-center gap-4 mb-12"
         >
-          <GameButton variant="ghost" size="icon" onClick={() => navigate("/")} className="text-muted-foreground hover:text-foreground shadow-none">
+          <GameButton variant="ghost" size="icon" onClick={() => navigate("/playlists")} aria-label="Volver a elegir música" className="text-muted-foreground hover:text-foreground shadow-none">
             <ArrowLeft className="w-5 h-5" />
           </GameButton>
           <div>
@@ -82,71 +60,68 @@ const GameModes = () => {
         {/* Mode Cards */}
         <div className="grid md:grid-cols-3 gap-6 mb-16">
           {modes.map((mode, i) => (
-            <motion.div
+            <motion.button
               key={mode.id}
+              type="button"
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.15 }}
               whileHover={mode.comingSoon ? undefined : { scale: 1.03, y: -4 }}
               whileTap={mode.comingSoon ? undefined : { scale: 0.98 }}
-              onClick={() => !mode.comingSoon && navigate(mode.route)}
-              aria-disabled={mode.comingSoon || undefined}
+              onClick={() => navigate(mode.route)}
+              disabled={mode.comingSoon}
+              className="text-left rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed"
             >
-              <GlassCard className={`rounded-2xl p-6 group relative overflow-hidden ${mode.comingSoon ? "opacity-60 grayscale cursor-not-allowed select-none" : "cursor-pointer"}`}>
-              {mode.comingSoon && (
-                <div className="absolute top-3 right-3 bg-black/60 border border-white/10 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full text-muted-foreground font-bold flex items-center gap-1">
-                  <Hammer className="w-3 h-3" /> Próximamente
+              <GlassCard className={`rounded-2xl p-6 h-full group relative overflow-hidden ${mode.comingSoon ? "opacity-60 grayscale select-none" : ""}`}>
+                {mode.comingSoon && (
+                  <div className="absolute top-3 right-3 bg-black/60 border border-white/10 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full text-muted-foreground font-bold">
+                    No disponible
+                  </div>
+                )}
+                {mode.id === "arena" && !mode.comingSoon && (
+                  <div className="absolute top-3 right-3 bg-accent/20 border border-accent/40 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full text-accent font-bold">
+                    Nuevo
+                  </div>
+                )}
+                <div className={`absolute inset-0 bg-gradient-to-br ${mode.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
+                <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${mode.color} flex items-center justify-center mb-4`}>
+                  <mode.icon className="w-7 h-7 text-primary-foreground" />
                 </div>
-              )}
-              <div className={`absolute inset-0 bg-gradient-to-br ${mode.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br ${mode.color} flex items-center justify-center mb-4`}>
-                <mode.icon className="w-7 h-7 text-primary-foreground" />
-              </div>
-              <h3 className="text-xl font-display font-bold text-foreground mb-2">{mode.title}</h3>
-              <p className="text-sm text-muted-foreground">{mode.description}</p>
+                <h3 className="text-xl font-display font-bold text-foreground mb-2">{mode.title}</h3>
+                <p className="text-sm text-muted-foreground">{mode.description}</p>
               </GlassCard>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
 
-        {/* Challenge Types */}
-        <motion.div
+        {/* Desafíos: informativos, se eligen dentro de cada modo */}
+        <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
+          aria-labelledby="desafios"
         >
-          <h2 className="text-xl font-display font-bold text-foreground mb-6 flex items-center gap-2">
+          <h2 id="desafios" className="text-xl font-display font-bold text-foreground mb-1 flex items-center gap-2">
             <Gamepad2 className="w-5 h-5 text-secondary" />
             Tipos de Desafío
           </h2>
+          <p className="text-sm text-muted-foreground mb-6">
+            Los desafíos se eligen dentro de cada modo. Toca una tarjeta para ver dónde está y cómo se juega.
+          </p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {displayChallenges.map((ch, i) => (
+            {CHALLENGES.map((challenge, i) => (
               <motion.div
-                key={ch.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + i * 0.1 }}
-                className={`rounded-xl p-4 flex items-start gap-3 relative transition-all ${
-                  ch.isActive 
-                    ? "glass border border-white/10 hover:border-primary/30" 
-                    : "bg-black/20 border border-white/5 opacity-60 grayscale cursor-not-allowed select-none"
-                }`}
+                key={challenge.id}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 + i * 0.05 }}
+                className="grid"
               >
-                {!ch.isActive && (
-                  <div className="absolute top-2 right-2 bg-black/60 border border-white/10 text-[8px] uppercase tracking-wider px-2 py-0.5 rounded-full text-muted-foreground font-bold flex items-center gap-1">
-                    <Hammer className="w-2 h-2" /> En desarrollo
-                  </div>
-                )}
-                
-                <span className={`text-2xl ${!ch.isActive ? 'opacity-50' : ''}`}>{ch.icon}</span>
-                <div>
-                  <h4 className={`font-semibold text-sm ${ch.isActive ? 'text-foreground' : 'text-muted-foreground'}`}>{ch.label}</h4>
-                  <p className="text-xs text-muted-foreground mt-1 pr-2">{ch.description}</p>
-                </div>
+                <ChallengeCard challenge={challenge} />
               </motion.div>
             ))}
           </div>
-        </motion.div>
+        </motion.section>
       </div>
     </div>
   );

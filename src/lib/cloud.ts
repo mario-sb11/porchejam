@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { STORAGE_KEYS } from "@/lib/storage";
+import { randomAvatar } from "@/lib/avatars";
 import {
   LOCAL_HISTORY_LIMIT,
   applyCloudStats,
@@ -112,6 +113,15 @@ export async function syncAfterLogin(user: User): Promise<Profile | null> {
     }
   }
 
+  // Las cuentas con el antiguo avatar "por defecto" reciben uno fijo (el de este navegador si
+  // ya tenía uno elegido, o uno aleatorio).
+  if (profile && profile.avatar === "default") {
+    const localAvatar = readLocal(STORAGE_KEYS.avatar);
+    const avatar = localAvatar && localAvatar !== "default" && isGuestBrowser ? localAvatar : randomAvatar();
+    const { error } = await supabase.from("profiles").update({ avatar }).eq("id", user.id);
+    if (!error) profile.avatar = avatar;
+  }
+
   await pullStatsIntoLocal(user.id);
   // A partir de aquí el progreso del navegador es el de esta cuenta, no de invitado.
   setLocal(STORAGE_KEYS.account, user.id);
@@ -153,4 +163,24 @@ export async function updateAvatar(avatar: string): Promise<void> {
   const userId = await currentUserId();
   if (!supabase || !userId) return;
   await supabase.from("profiles").update({ avatar }).eq("id", userId);
+}
+
+/**
+ * Cambia el nombre público. Como invitado solo se guarda en el navegador; con cuenta también en
+ * el perfil (el nombre es único: si ya lo tiene otro jugador, se avisa y no se cambia nada).
+ */
+export async function updateUsername(name: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const clean = name.trim().replace(/\s+/g, " ");
+  if (!isValidUsername(clean)) {
+    return { ok: false, error: "Usa entre 2 y 20 letras, números, espacios, puntos o guiones." };
+  }
+  const userId = await currentUserId();
+  if (supabase && userId) {
+    const { error } = await supabase.from("profiles").update({ username: clean }).eq("id", userId);
+    if (error) {
+      return { ok: false, error: error.code === "23505" ? "Ese nombre ya lo usa otro jugador." : "No se pudo guardar. Inténtalo de nuevo." };
+    }
+  }
+  setLocal(STORAGE_KEYS.username, clean);
+  return { ok: true };
 }

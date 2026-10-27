@@ -1,6 +1,6 @@
 import { lazy, Suspense } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,9 +16,9 @@ const LocalLobby = lazy(() => import("./pages/LocalLobby"));
 const GameSettings = lazy(() => import("./pages/GameSettings"));
 const GameInterface = lazy(() => import("./pages/GameInterface"));
 const ImposterInterface = lazy(() => import("./pages/ImposterInterface"));
-const Lobby = lazy(() => import("./pages/Lobby"));
+const ArenaHome = lazy(() => import("./pages/ArenaHome"));
+const ArenaRoom = lazy(() => import("./pages/ArenaRoom"));
 const PostGameSummary = lazy(() => import("./pages/PostGameSummary"));
-const FinalResults = lazy(() => import("./pages/FinalResults"));
 const DailyChallenge = lazy(() => import("./pages/DailyChallenge"));
 const DailyChallengeResult = lazy(() => import("./pages/DailyChallengeResult"));
 const DailyGame = lazy(() => import("./pages/DailyGame"));
@@ -55,9 +55,11 @@ const App = () => (
               <Route path="/settings" element={<GameSettings />} />
               <Route path="/game" element={<GameInterface />} />
               <Route path="/imposter" element={<ImposterInterface />} />
-              <Route path="/lobby" element={<Lobby />} />
+              <Route path="/arena" element={<ArenaHome />} />
+              <Route path="/arena/:code" element={<ArenaRoom />} />
+              <Route path="/lobby" element={<Navigate to="/arena" replace />} />
               <Route path="/summary" element={<PostGameSummary />} />
-              <Route path="/results" element={<FinalResults />} />
+              <Route path="/results" element={<Navigate to="/dashboard" replace />} />
               <Route path="/cancion-del-dia" element={<DailyChallenge />} />
               <Route path="/cancion-del-dia/:categoria" element={<DailyGame />} />
               <Route path="/cancion-del-dia/:categoria/resultado" element={<DailyChallengeResult />} />

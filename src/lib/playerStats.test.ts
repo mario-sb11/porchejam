@@ -124,3 +124,11 @@ describe("progreso de invitado al iniciar sesión", () => {
     expect(localStorage.getItem(STORAGE_KEYS.account)).toBeNull();
   });
 });
+
+describe("describeModeKey", () => {
+  it("nombra la Arena Online", async () => {
+    const { describeModeKey } = await import("./playerStats");
+    expect(describeModeKey("party-online")).toBe("Arena Online");
+    expect(describeModeKey("solo-survival")).toBe("Solitario - Supervivencia");
+  });
+});

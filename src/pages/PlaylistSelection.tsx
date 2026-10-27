@@ -211,6 +211,8 @@ const PlaylistSelection = () => {
 
   const handleContinue = () => {
     if (selectedItems.length === 0) return;
+    // Portada de la primera selección (la usa la Arena Online para mostrar la sala).
+    localStorage.setItem("porchejam_selected_cover", selectedItems[0].cover.startsWith("http") ? selectedItems[0].cover : "");
 
     if (selectedItems.length === 1) {
       // Partida Normal

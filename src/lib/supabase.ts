@@ -30,3 +30,6 @@ export const enabledProviders: ReadonlySet<AuthProvider> = new Set(
 );
 
 export const accountsEnabled = enabledProviders.size > 0;
+
+/** La Arena Online solo necesita la base de datos (se puede jugar sin cuenta). */
+export const arenaAvailable = supabase !== null;

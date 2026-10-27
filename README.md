@@ -15,7 +15,8 @@ La aplicación se estructura en torno a diferentes formas de interactuar con la 
     * **Modo Fiesta Local:** El modo fiesta local consiste en un multijugador desde un mismo dispostivo, este modo consta de 3 submodos: Por turnos, El impostor y zumbadores.
     * **Modo Fiesta Local "Por turnos":** Adivinar canción/artista por rondas, supervivencia, la patata caliente, reversa
     * **Modo Fiesta Local "Impostor":** Dinámica de deducción social donde varios jugadores reciben la misma información sobre una canción (audio, nombre y artista), excepto 1 (el impostor) que recibirá una pista o nada, este debe fingir que tiene la misma información que el resto sin haberla recibido, los jugadores reales tienen que pillar al impostor.
-    * **Modo Multijugador en línea:** Este modo se encuentra en desarrollo.
+    * **Modo Fiesta Local "Zumbadores":** todos escuchan a la vez en el mismo móvil y responde quien pulse antes su nombre; si falla, se queda fuera de la ronda.
+    * **Arena Online:** multijugador en tiempo real, cada uno desde su móvil. El anfitrión crea una sala y comparte un código o enlace; la canción suena a la vez en todos y el servidor decide aciertos y puntos. No hace falta cuenta. Ver [docs/plan-multijugador.md](docs/plan-multijugador.md).
 2. **Canción del Día:** reto diario estilo Heardle en 5 categorías (España, Global, Urbano, Clásicos y Comodín). Todos tienen la misma canción, 6 intentos con fragmentos cada vez más largos, rachas y resultado para compartir.
 3. **Music Race:** Un reto de lógica y cultura musical. El objetivo es conectar un artista inicial con uno de destino navegando únicamente a través de sus álbumes, colaboraciones y artistas relacionados.
 4. **Buscador y Personalización:** Herramienta para explorar el catálogo global y configurar partidas basadas en gustos específicos.
@@ -66,6 +67,8 @@ Navegador (React)  ──►  /api/* (Vercel Functions)  ──►  api.deezer.c
 * Sin CORS abierto: el backend solo se consume desde el propio dominio.
 * Cabeceras de seguridad en `vercel.json`: Content-Security-Policy, HSTS, `X-Frame-Options`, `nosniff`, `Referrer-Policy` y `Permissions-Policy`.
 * Los errores internos nunca se devuelven al cliente.
+* Arena Online: tablas en un esquema privado accesible solo mediante funciones que validan cada dato; las canciones las elige el servidor con un secreto y las respuestas se comprueban en la base de datos.
+* Pruebas de seguridad de la base de datos en PostgreSQL real (`npm run test:db`), también en CI.
 
 ## Despliegue y Demo
 
@@ -91,3 +94,4 @@ No hace falta arrancar ningún servidor aparte: en desarrollo, Vite sirve tambi�
 | `npm run typecheck` | Comprobación de tipos (app, API y configuración) |
 | `npm run lint` | ESLint |
 | `npm test` | Tests (Vitest) |
+| `npm run test:db` | Migraciones + pruebas SQL en un PostgreSQL vacío (`DATABASE_URL`) |

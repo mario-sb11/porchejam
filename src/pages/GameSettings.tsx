@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Heart, SkipForward, Gamepad2, Ghost, Lightbulb, Clock, Infinity as InfinityIcon, Tag, Volume2, Sparkles, MessageSquareQuote } from "lucide-react";
+import { ArrowLeft, Heart, SkipForward, Gamepad2, Ghost, Lightbulb, Clock, Infinity as InfinityIcon, Tag, Volume2, Sparkles, MessageSquareQuote, Globe, Loader2 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { arena, readSelectedSource, type AnswerMode } from "@/lib/arena";
+import { isValidUsername } from "@/lib/cloud";
 
 
 const TIME_OPTIONS = [5, 10, 15, 30];
@@ -47,6 +49,9 @@ const GameSettings = () => {
   const mode = searchParams.get("mode") || "solo";
   
   const isImposterMode = searchParams.get("special") === "imposter";
+  const isOnline = mode === "online";
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
 
   // Estados Clásicos
   const [listenTime, setListenTime] = useState(15);
@@ -65,7 +70,34 @@ const GameSettings = () => {
   const [debateTime, setDebateTime] = useState(5); 
   const [audioListenTime, setAudioListenTime] = useState(10); 
 
+  // Arena Online: crea la sala con la música elegida y lleva al lobby.
+  const handleCreateRoom = async () => {
+    const source = readSelectedSource();
+    if (!source) {
+      navigate("/playlists");
+      return;
+    }
+    const { name, avatar } = arena.identity();
+    if (!isValidUsername(name)) {
+      setCreateError("Tu nombre de jugador no es válido para jugar online (2-20 letras o números). Cámbialo en tu perfil.");
+      return;
+    }
+    setCreating(true);
+    setCreateError(null);
+    try {
+      const code = await arena.create(name, avatar, { rounds, seconds: listenTime, answer: answerMode as AnswerMode }, source);
+      navigate(`/arena/${code}`);
+    } catch (error) {
+      setCreateError((error as Error).message);
+      setCreating(false);
+    }
+  };
+
   const handleStart = () => {
+    if (isOnline) {
+      void handleCreateRoom();
+      return;
+    }
     let params;
     
     if (isImposterMode) {
@@ -108,10 +140,14 @@ const GameSettings = () => {
           </Button>
           <div>
             <h1 className="text-3xl font-display font-bold text-foreground">
-              {isImposterMode ? "Ajustes del Infiltrado" : "Configuración de Partida"}
+              {isImposterMode ? "Ajustes del Infiltrado" : isOnline ? "Crear sala online" : "Configuración de Partida"}
             </h1>
             <p className="text-muted-foreground mt-1">
-              {isImposterMode ? "Prepara el terreno para el engaño" : "Ajusta las reglas a tu gusto"}
+              {isImposterMode
+                ? "Prepara el terreno para el engaño"
+                : isOnline
+                  ? "Elige las reglas; después invitas a tus amigos con un código"
+                  : "Ajusta las reglas a tu gusto"}
             </p>
           </div>
         </motion.div>
@@ -263,6 +299,7 @@ const GameSettings = () => {
           ) : (
             /* ================= PANEL CLÁSICO ================= */
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
+              {!isOnline && (
               <Section title="Modo especial" delay={0.1}>
                 <div className="grid grid-cols-2 gap-3">
                   {SPECIAL_MODES.map((sm) => {
@@ -287,6 +324,7 @@ const GameSettings = () => {
                   })}
                 </div>
               </Section>
+              )}
 
               <Section title={specialMode === "contrarreloj" ? "Tiempo Global de la Partida" : "Tiempo por canción"} delay={0.15}>
                 <div className="flex gap-3">
@@ -357,6 +395,7 @@ const GameSettings = () => {
                 </div>
               </Section>
 
+              {!isOnline && (
               <Section title="Ajustes Extras" delay={0.3}>
                 <div className="flex items-center justify-between glass rounded-xl p-4 bg-black/20 border border-transparent hover:border-white/10 transition-colors">
                   <div className="flex items-center gap-3">
@@ -369,14 +408,20 @@ const GameSettings = () => {
                   <Switch checked={allowSkip} onCheckedChange={setAllowSkip} />
                 </div>
               </Section>
+              )}
             </motion.div>
           )}
 
         </div>
 
+        {createError && (
+          <p role="alert" className="mt-8 text-center text-sm text-red-400">{createError}</p>
+        )}
+
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mt-12 flex justify-center">
           <Button 
             onClick={handleStart} 
+            disabled={creating}
             size="lg" 
             className={`h-14 px-12 text-lg font-bold rounded-full text-primary-foreground transition-all ${
               isImposterMode 
@@ -384,8 +429,16 @@ const GameSettings = () => {
                 : "bg-primary animate-pulse_glow"
             }`}
           >
-            {isImposterMode ? <Ghost className="w-5 h-5 mr-2" /> : <Gamepad2 className="w-5 h-5 mr-2" />}
-            Empezar Partida
+            {creating ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : isImposterMode ? (
+              <Ghost className="w-5 h-5 mr-2" />
+            ) : isOnline ? (
+              <Globe className="w-5 h-5 mr-2" />
+            ) : (
+              <Gamepad2 className="w-5 h-5 mr-2" />
+            )}
+            {isOnline ? "Crear sala" : "Empezar Partida"}
           </Button>
         </motion.div>
       </div>
