@@ -34,7 +34,15 @@ function apiDevServer(): Plugin {
             res.statusCode = 405;
             return res.end(JSON.stringify({ error: "Método no permitido" }));
           }
-          const response: Response = await fn(new Request(url, { method }));
+          let body: Buffer | undefined;
+          if (method !== "GET" && method !== "HEAD") {
+            const chunks: Buffer[] = [];
+            for await (const chunk of req) chunks.push(chunk as Buffer);
+            body = Buffer.concat(chunks);
+          }
+          const response: Response = await fn(
+            new Request(url, { method, body, headers: { "content-type": String(req.headers["content-type"] ?? "") } }),
+          );
           res.statusCode = response.status;
           response.headers.forEach((value, key) => res.setHeader(key, value));
           res.end(Buffer.from(await response.arrayBuffer()));

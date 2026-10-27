@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import CircularTimer from "@/components/CircularTimer";
 import MusicVisualizer from "@/components/MusicVisualizer";
 import ScorePop from "@/components/ScorePop";
-import { calculateScore } from "@/data/mockData";
+import { calculateScore } from "@/lib/scoring";
 import { apiUrl } from "@/lib/api";
 import { freshPreviewUrl } from "@/lib/preview";
 

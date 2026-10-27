@@ -1,10 +1,24 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Music2, Radio, Play, Route, Disc3 } from "lucide-react";
+import { Music2, Radio, Play, Route, Disc3, Globe } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import GlassCard from "@/components/ui/GlassCard";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { apiUrl } from "@/lib/api";
+import { arenaAvailable } from "@/lib/supabase";
+
+/** Las tarjetas que actúan como botón también responden a Intro y Espacio. */
+const activateWith = (action: () => void) => ({
+  role: "button" as const,
+  tabIndex: 0,
+  onClick: action,
+  onKeyDown: (event: React.KeyboardEvent) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      action();
+    }
+  },
+});
 
 
 const Dashboard = () => {
@@ -332,7 +346,7 @@ const Dashboard = () => {
           <motion.div variants={itemVariants} className="md:col-span-2">
             <GlassCard
               className="group relative overflow-hidden p-8 md:p-12 border-primary/40 bg-gradient-to-br from-primary/20 via-background to-secondary/10 cursor-pointer hover:border-primary transition-all duration-300"
-              onClick={() => navigate("/playlists")} role="button" tabIndex={0}
+              {...activateWith(() => navigate("/playlists"))}
             >
               <div className="absolute top-0 right-0 p-8 opacity-10 transform translate-x-4 -translate-y-4 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-500 pointer-events-none">
                 <Radio className="w-48 h-48" />
@@ -363,7 +377,7 @@ const Dashboard = () => {
           <motion.div variants={itemVariants}>
             <GlassCard
               className="h-full p-6 md:p-8 flex flex-col justify-between border-secondary/30 bg-gradient-to-br from-secondary/10 to-transparent cursor-pointer hover:border-secondary/60 transition-colors"
-              onClick={() => navigate("/cancion-del-dia")} role="button" tabIndex={0}
+              {...activateWith(() => navigate("/cancion-del-dia"))}
             >
               <div>
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -382,7 +396,7 @@ const Dashboard = () => {
           <motion.div variants={itemVariants}>
             <GlassCard 
               className="h-full p-6 md:p-8 flex flex-col justify-between border-blue-500/30 bg-gradient-to-br from-blue-500/10 to-transparent cursor-pointer hover:border-blue-500/60 transition-colors"
-              onClick={() => navigate("/music-race")}
+              {...activateWith(() => navigate("/music-race"))}
             >
               <div>
                 <div className="flex items-start justify-between gap-4 mb-4">
@@ -396,6 +410,24 @@ const Dashboard = () => {
               </div>
             </GlassCard>
           </motion.div>
+          {/* MODO: ARENA ONLINE */}
+          {arenaAvailable && (
+            <motion.div variants={itemVariants} className="md:col-span-2">
+              <GlassCard
+                className="p-6 md:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-accent/30 bg-gradient-to-br from-accent/10 to-transparent cursor-pointer hover:border-accent/60 transition-colors"
+                {...activateWith(() => navigate("/arena"))}
+              >
+                <div className="flex items-start gap-4">
+                  <div className="p-3 rounded-xl bg-accent/20 text-accent"><Globe className="h-6 w-6" /></div>
+                  <div>
+                    <h3 className="text-2xl font-display font-bold text-white mb-1">Arena Online</h3>
+                    <p className="text-sm text-zinc-400">Cada uno desde su móvil y la misma canción a la vez. Únete con un código o crea tu sala.</p>
+                  </div>
+                </div>
+                <span className="self-start sm:self-center rounded-full bg-accent/20 px-3 py-1 text-[10px] uppercase font-bold text-accent border border-accent/30">Nuevo</span>
+              </GlassCard>
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </div>

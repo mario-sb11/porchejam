@@ -40,6 +40,7 @@ const SPECIAL_MODE_NAMES: Record<string, string> = {
 /** Traduce una clave del contador de modos ("solo-survival", "party-imposter-mixto") a texto legible. */
 export function describeModeKey(key: string): string {
   const [mode, special, reveal] = key.split("-");
+  if (special === "online") return "Arena Online";
   if (special === "imposter") {
     const revealName = reveal ? reveal.charAt(0).toUpperCase() + reveal.slice(1) : "Mixto";
     return `Infiltrado - ${revealName}`;
