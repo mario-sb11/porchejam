@@ -1,6 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { STORAGE_KEYS } from "@/lib/storage";
+import { randomAvatar } from "@/lib/avatars";
 import {
   LOCAL_HISTORY_LIMIT,
   applyCloudStats,
@@ -110,6 +111,15 @@ export async function syncAfterLogin(user: User): Promise<Profile | null> {
       const { error } = await supabase.from("profiles").update({ username: localName }).eq("id", user.id);
       if (!error) profile.username = localName;
     }
+  }
+
+  // Las cuentas con el antiguo avatar "por defecto" reciben uno fijo (el de este navegador si
+  // ya tenía uno elegido, o uno aleatorio).
+  if (profile && profile.avatar === "default") {
+    const localAvatar = readLocal(STORAGE_KEYS.avatar);
+    const avatar = localAvatar && localAvatar !== "default" && isGuestBrowser ? localAvatar : randomAvatar();
+    const { error } = await supabase.from("profiles").update({ avatar }).eq("id", user.id);
+    if (!error) profile.avatar = avatar;
   }
 
   await pullStatsIntoLocal(user.id);

@@ -58,7 +58,6 @@ const Privacy = () => {
             <li><strong>Vercel</strong> aloja la web y mide visitas de forma anónima, sin cookies.</li>
             <li><strong>Supabase</strong> guarda las cuentas y las salas de la Arena en servidores de la Unión Europea (París).</li>
             <li><strong>Google</strong>, solo si eliges iniciar sesión con Google.</li>
-            <li><strong>DiceBear</strong> dibuja los avatares ilustrados; recibe tu dirección IP al cargarlos.</li>
             <li>
               <strong>Deezer</strong> proporciona las canciones: los fragmentos de audio y las portadas se cargan
               directamente desde sus servidores, que reciben tu dirección IP como en cualquier web.

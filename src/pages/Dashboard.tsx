@@ -4,6 +4,9 @@ import { Music2, Radio, Play, Route, Disc3, Globe } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import GlassCard from "@/components/ui/GlassCard";
 import PlayerAvatar from "@/components/PlayerAvatar";
+import { randomAvatar } from "@/lib/avatars";
+import { updateAvatar } from "@/lib/cloud";
+import { useAuth } from "@/contexts/AuthContext";
 import { apiUrl } from "@/lib/api";
 import { arenaAvailable } from "@/lib/supabase";
 
@@ -73,6 +76,19 @@ const Dashboard = () => {
 
     return () => stopDisco();
   }, [navigate]);
+
+  // Avatar fijo: un invitado con el antiguo avatar "por defecto" (que cambiaba con el nombre)
+  // recibe un personaje aleatorio que ya no cambia. Con cuenta lo hace la sincronización.
+  const { session, loading: authLoading } = useAuth();
+  useEffect(() => {
+    if (authLoading || session) return;
+    const savedAvatar = localStorage.getItem("porchejam_avatar");
+    if (!savedAvatar || savedAvatar === "default") {
+      const fresh = randomAvatar();
+      setCurrentAvatar(fresh);
+      void updateAvatar(fresh);
+    }
+  }, [authLoading, session]);
 
   const triggerMessage = () => {
     if (messageTimeoutRef.current) clearTimeout(messageTimeoutRef.current);

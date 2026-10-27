@@ -4,27 +4,13 @@ import { ArrowLeft, Trophy, Target, Zap, Flame, Music, LogOut, Edit2, X, User, P
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import PlayerAvatar, { dicebearUrl } from "@/components/PlayerAvatar";
+import PlayerAvatar from "@/components/PlayerAvatar";
+import AvatarPicker from "@/components/AvatarPicker";
 import { readPlayerStats, type PlayerStats } from "@/lib/playerStats";
 import { updateAvatar, updateUsername } from "@/lib/cloud";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInOptions from "@/components/SignInOptions";
 
-// Lista de avatares gratuitos (emojis + personas de Dicebear)
-const FREE_AVATARS = [
-  "default", 
-  "persona:Maria",
-  "persona:Alex",
-  "persona:Sofia",
-  "persona:David",
-  "persona:Lucia",
-  "persona:Hugo",
-  "persona:Leo",
-  "persona:Mateo",
-  "persona:Lucas",
-  "persona:Daniel",
-  "🎧", "🎸", "🎤", "🦝", "🔥", "⚡"
-];
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -131,9 +117,11 @@ const UserProfile = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="flex flex-col items-center mb-10">
           
           {/* Avatar Clickable */}
-          <div 
-            className="relative cursor-pointer group mb-4"
+          <button
+            type="button"
+            className="relative group mb-4 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             onClick={() => setIsAvatarModalOpen(true)}
+            aria-label="Cambiar avatar"
           >
             <div className="transition-transform group-hover:scale-105 group-hover:shadow-[0_0_20px_rgba(34,197,94,0.3)] rounded-full">
               {renderAvatar(currentAvatar)}
@@ -141,7 +129,7 @@ const UserProfile = () => {
             <div className="absolute bottom-0 right-0 bg-secondary rounded-full p-1.5 border border-black shadow-lg z-10">
               <Edit2 className="w-4 h-4 text-white" />
             </div>
-          </div>
+          </button>
 
           {editingName ? (
             <form onSubmit={saveName} className="flex flex-col items-center gap-2 w-full max-w-xs">
@@ -268,58 +256,13 @@ const UserProfile = () => {
       </div>
 
       {/* MODAL PARA CAMBIAR AVATAR */}
-      <AnimatePresence>
-        {isAvatarModalOpen && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
-          >
-            <motion.div 
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="bg-zinc-900 border border-white/10 rounded-2xl p-6 w-full max-w-sm"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold text-white">Elige tu Avatar</h3>
-                <button onClick={() => setIsAvatarModalOpen(false)} className="text-zinc-400 hover:text-white">
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                {FREE_AVATARS.map((avatar) => (
-                  <button
-                    key={avatar}
-                    onClick={() => selectAvatar(avatar)}
-                    className={`aspect-square flex items-center justify-center rounded-xl transition-all overflow-hidden ${
-                      currentAvatar === avatar 
-                        ? "ring-2 ring-primary bg-primary/10 scale-105" 
-                        : "bg-white/5 border border-transparent hover:bg-white/10"
-                    }`}
-                  >
-                    {avatar === "default" || avatar.startsWith("persona:") ? (
-                      <img 
-                        src={dicebearUrl(avatar === "default" ? username : avatar.split(":")[1])} 
-                        alt="Avatar" 
-                        className="w-full h-full object-cover" 
-                      />
-                    ) : (
-                      <span className="text-4xl">{avatar}</span>
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              <div className="text-center p-3 bg-white/5 rounded-lg border border-white/5">
-                <p className="text-xs text-zinc-400">Próximamente avatares premium en la tienda con 🪙</p>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <AvatarPicker
+        open={isAvatarModalOpen}
+        current={currentAvatar}
+        name={username}
+        onClose={() => setIsAvatarModalOpen(false)}
+        onSave={selectAvatar}
+      />
     </div>
   );
 };
