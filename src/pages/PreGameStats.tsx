@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { motion, Variants, AnimatePresence } from "framer-motion";
-import { Play, Loader2, Gamepad2, User, Users, Globe, X, Swords, Clock, Ghost, Music, LogOut, ArrowLeft } from "lucide-react";
+import { Play, Loader2, Gamepad2, User, Users, Globe, X, Swords, Clock, Ghost, Music, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import GameButton from "@/components/ui/GameButton";
 import GlassCard from "@/components/ui/GlassCard";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import PlayerAvatar from "@/components/PlayerAvatar";
 import type { MatchRecord } from "@/lib/playerStats";
 
 const PreGameStats = () => {
@@ -107,32 +107,12 @@ const PreGameStats = () => {
     );
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("porchejam_username");
-    navigate("/");
-  };
+  // El nombre y el avatar se cambian en el perfil (también con cuenta).
+  const handleLogout = () => navigate("/profile");
 
-  // Función auxiliar para generar Avatar
-  const getDicebearUrl = (seed: string) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=transparent`;
-
-  const renderProfileAvatar = () => {
-    if (currentAvatar === "default" || currentAvatar.startsWith("persona:")) {
-      const seed = currentAvatar === "default" ? username : currentAvatar.split(":")[1];
-      return (
-        <Avatar className="w-full h-full rounded-full border-none bg-black">
-          <AvatarImage src={getDicebearUrl(seed)} alt={username} className="object-cover" />
-          <AvatarFallback className="bg-zinc-900 text-zinc-100 font-bold text-3xl">
-            {username.slice(0, 1).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-      );
-    }
-    return (
-      <div className="w-full h-full rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center glow-green border-2 border-transparent text-4xl">
-        {currentAvatar}
-      </div>
-    );
-  };
+  const renderProfileAvatar = () => (
+    <PlayerAvatar avatar={currentAvatar} name={username} className="w-full h-full text-4xl" />
+  );
 
   return (
     <div className="min-h-screen bg-black bg-gradient-to-br from-black via-zinc-950 to-zinc-900 text-white p-4 md:p-6 overflow-x-hidden relative">
@@ -168,9 +148,8 @@ const PreGameStats = () => {
               onClick={handleLogout}
               className="rounded-full border-white/15 bg-black/30 text-zinc-200 hover:bg-black/50 text-xs px-3"
             >
-              <LogOut className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Cambiar nombre</span>
-              <span className="inline sm:hidden">Salir</span>
+              <User className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+              <span>Editar perfil</span>
             </GameButton>
           </div>
         </motion.div>

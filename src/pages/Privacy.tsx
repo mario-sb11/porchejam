@@ -12,7 +12,7 @@ const Privacy = () => {
     <div className="min-h-screen gradient-bg px-4 py-10">
       <article className="mx-auto max-w-3xl rounded-2xl border border-white/10 bg-black/40 p-6 text-zinc-200 backdrop-blur-sm">
         <h1 className="mb-2 text-3xl font-bold">Política de Privacidad</h1>
-        <p className="text-xs text-zinc-500">Última actualización: 26 de octubre de 2026</p>
+        <p className="text-xs text-zinc-500">Última actualización: 27 de octubre de 2026</p>
 
         <Section title="Resumen">
           <p>
@@ -43,11 +43,22 @@ const Privacy = () => {
           </p>
         </Section>
 
+        <Section title="Si juegas en la Arena Online">
+          <p>
+            Para jugar en una sala guardamos el nombre y el avatar que eliges (los ven los demás jugadores de la sala),
+            tus respuestas y tus puntos. Tu navegador se identifica con un código aleatorio del que solo guardamos una
+            huella cifrada. Para evitar abusos, al crear una sala guardamos una huella cifrada e irreversible de tu
+            conexión (nunca tu dirección IP). Las salas y todo lo anterior se borran automáticamente como mucho 3 horas
+            después de la última actividad.
+          </p>
+        </Section>
+
         <Section title="Servicios que usamos">
           <ul className="list-disc space-y-1 pl-5">
             <li><strong>Vercel</strong> aloja la web y mide visitas de forma anónima, sin cookies.</li>
-            <li><strong>Supabase</strong> guarda las cuentas en servidores de la Unión Europea (París).</li>
+            <li><strong>Supabase</strong> guarda las cuentas y las salas de la Arena en servidores de la Unión Europea (París).</li>
             <li><strong>Google</strong>, solo si eliges iniciar sesión con Google.</li>
+            <li><strong>DiceBear</strong> dibuja los avatares ilustrados; recibe tu dirección IP al cargarlos.</li>
             <li>
               <strong>Deezer</strong> proporciona las canciones: los fragmentos de audio y las portadas se cargan
               directamente desde sus servidores, que reciben tu dirección IP como en cualquier web.

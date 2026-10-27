@@ -1,11 +1,12 @@
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Trophy, Target, Zap, Flame, Music, LogOut, Edit2, X, User } from "lucide-react";
+import { ArrowLeft, Trophy, Target, Zap, Flame, Music, LogOut, Edit2, X, User, Pencil, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import PlayerAvatar, { dicebearUrl } from "@/components/PlayerAvatar";
 import { readPlayerStats, type PlayerStats } from "@/lib/playerStats";
-import { updateAvatar } from "@/lib/cloud";
+import { updateAvatar, updateUsername } from "@/lib/cloud";
 import { useAuth } from "@/contexts/AuthContext";
 import SignInOptions from "@/components/SignInOptions";
 
@@ -34,6 +35,28 @@ const UserProfile = () => {
   const { session, profile, accountsEnabled, loading: authLoading, signOut, deleteAccount } = useAuth();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [savingName, setSavingName] = useState(false);
+
+  const saveName = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (nameDraft.trim() === username) {
+      setEditingName(false);
+      return;
+    }
+    setSavingName(true);
+    const result = await updateUsername(nameDraft);
+    setSavingName(false);
+    if ("error" in result) {
+      setNameError(result.error);
+      return;
+    }
+    setUsername(nameDraft.trim().replace(/\s+/g, " "));
+    setEditingName(false);
+    setNameError(null);
+  };
 
   useEffect(() => {
     const savedUsername = localStorage.getItem("porchejam_username");
@@ -87,28 +110,9 @@ const UserProfile = () => {
     setIsAvatarModalOpen(false);
   };
 
-  // Función auxiliar para obtener la URL de un avatar persona
-  const getDicebearUrl = (seed: string) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=transparent`;
-
-  // Función para renderizar el avatar actual (ya sea emoji o imagen)
-  const renderAvatar = (avatarStr: string, sizeClass = "w-24 h-24 text-5xl") => {
-    if (avatarStr === "default" || avatarStr.startsWith("persona:")) {
-      const seed = avatarStr === "default" ? username : avatarStr.split(":")[1];
-      return (
-        <Avatar className={`${sizeClass} border-2 border-transparent bg-black`}>
-          <AvatarImage src={getDicebearUrl(seed)} alt={username} />
-          <AvatarFallback className="bg-zinc-900 text-zinc-100 font-bold text-3xl">
-            {username.slice(0, 1).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-      );
-    }
-    return (
-      <div className={`${sizeClass} rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center glow-green border-2 border-transparent`}>
-        {avatarStr}
-      </div>
-    );
-  };
+  const renderAvatar = (avatarStr: string, sizeClass = "w-24 h-24 text-5xl") => (
+    <PlayerAvatar avatar={avatarStr} name={username} className={`${sizeClass} border-2 border-transparent`} />
+  );
 
   return (
     <div className="min-h-screen gradient-bg px-4 py-8 relative">
@@ -139,7 +143,39 @@ const UserProfile = () => {
             </div>
           </div>
 
-          <h2 className="text-2xl font-display font-bold text-foreground">{username}</h2>
+          {editingName ? (
+            <form onSubmit={saveName} className="flex flex-col items-center gap-2 w-full max-w-xs">
+              <div className="flex gap-2 w-full">
+                <Input
+                  value={nameDraft}
+                  onChange={(e) => setNameDraft(e.target.value)}
+                  maxLength={20}
+                  autoFocus
+                  aria-label="Nuevo nombre"
+                  className="h-11 glass border-white/10 text-center font-bold"
+                />
+                <Button type="submit" size="icon" disabled={savingName} className="h-11 w-11 shrink-0" aria-label="Guardar nombre">
+                  <Check className="w-4 h-4" />
+                </Button>
+                <Button type="button" size="icon" variant="ghost" onClick={() => { setEditingName(false); setNameError(null); }} className="h-11 w-11 shrink-0" aria-label="Cancelar">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+              {nameError && <p className="text-xs text-red-400" role="alert">{nameError}</p>}
+            </form>
+          ) : (
+            <h2 className="text-2xl font-display font-bold text-foreground flex items-center gap-2">
+              {username}
+              <button
+                type="button"
+                onClick={() => { setNameDraft(username); setEditingName(true); }}
+                className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/10"
+                aria-label="Cambiar nombre"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            </h2>
+          )}
           <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
             <User className="w-3 h-3" /> {session ? `Cuenta: ${session.user.email ?? "conectada"}` : "Invitado en PorcheJam"}
           </p>
@@ -184,7 +220,7 @@ const UserProfile = () => {
                 >
                   <div>
                     <div className="text-sm font-semibold text-foreground">
-                      {game.cover} {game.playlist} <span className="text-primary opacity-80">· {game.mode === "solo" ? "Solitario" : "Fiesta"} {game.specialMode}</span>
+                      {game.cover} {game.playlist} <span className="text-primary opacity-80">· {game.specialMode === "Arena Online" ? "Arena Online" : `${game.mode === "solo" ? "Solitario" : "Fiesta"} ${game.specialMode}`}</span>
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {game.date}{game.accuracy ? <> · <span className="text-white/80">{game.accuracy} aciertos</span></> : null}
@@ -206,7 +242,7 @@ const UserProfile = () => {
         {/* Logout */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }} className="mt-6 flex justify-center">
           <Button variant="ghost" onClick={handleLogout} className="text-destructive hover:text-destructive/80 hover:bg-destructive/10">
-            <LogOut className="w-4 h-4 mr-2" /> Cerrar sesión
+            <LogOut className="w-4 h-4 mr-2" /> {session ? "Cerrar sesión" : "Salir"}
           </Button>
         </motion.div>
 
@@ -266,7 +302,7 @@ const UserProfile = () => {
                   >
                     {avatar === "default" || avatar.startsWith("persona:") ? (
                       <img 
-                        src={getDicebearUrl(avatar === "default" ? username : avatar.split(":")[1])} 
+                        src={dicebearUrl(avatar === "default" ? username : avatar.split(":")[1])} 
                         alt="Avatar" 
                         className="w-full h-full object-cover" 
                       />

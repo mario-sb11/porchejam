@@ -154,3 +154,23 @@ export async function updateAvatar(avatar: string): Promise<void> {
   if (!supabase || !userId) return;
   await supabase.from("profiles").update({ avatar }).eq("id", userId);
 }
+
+/**
+ * Cambia el nombre público. Como invitado solo se guarda en el navegador; con cuenta también en
+ * el perfil (el nombre es único: si ya lo tiene otro jugador, se avisa y no se cambia nada).
+ */
+export async function updateUsername(name: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const clean = name.trim().replace(/\s+/g, " ");
+  if (!isValidUsername(clean)) {
+    return { ok: false, error: "Usa entre 2 y 20 letras, números, espacios, puntos o guiones." };
+  }
+  const userId = await currentUserId();
+  if (supabase && userId) {
+    const { error } = await supabase.from("profiles").update({ username: clean }).eq("id", userId);
+    if (error) {
+      return { ok: false, error: error.code === "23505" ? "Ese nombre ya lo usa otro jugador." : "No se pudo guardar. Inténtalo de nuevo." };
+    }
+  }
+  setLocal(STORAGE_KEYS.username, clean);
+  return { ok: true };
+}

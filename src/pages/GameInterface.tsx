@@ -618,7 +618,7 @@ const GameInterface = () => {
 
         <div className="text-right">
           <div className="text-2xl font-display font-bold text-primary">
-            {isPartyMode && currentPlayer ? (partyScores[currentPlayer.id] || 0) : score}
+            {isPartyMode && currentPlayer ? (partyScores[currentPlayer.id] || 0) : isBuzzer ? "—" : score}
           </div>
           <div className="text-[10px] uppercase">Puntos</div>
         </div>

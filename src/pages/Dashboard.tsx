@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Music2, Radio, Play, Route, Disc3, Globe } from "lucide-react";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import GlassCard from "@/components/ui/GlassCard";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import PlayerAvatar from "@/components/PlayerAvatar";
 import { apiUrl } from "@/lib/api";
 import { arenaAvailable } from "@/lib/supabase";
 
@@ -162,26 +162,9 @@ const Dashboard = () => {
     }
   };
 
-  const getDicebearUrl = (seed: string) => `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}&backgroundColor=transparent`;
-
-  const renderHeaderAvatar = () => {
-    if (currentAvatar === "default" || currentAvatar.startsWith("persona:")) {
-      const seed = currentAvatar === "default" ? username : currentAvatar.split(":")[1];
-      return (
-        <Avatar className="h-12 w-12 md:h-14 md:w-14">
-          <AvatarImage src={getDicebearUrl(seed)} alt={username} />
-          <AvatarFallback className="bg-zinc-900 text-zinc-100 font-bold">
-            {username.slice(0, 1).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-      );
-    }
-    return (
-      <div className="h-12 w-12 md:h-14 md:w-14 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center glow-green border-2 border-transparent text-xl md:text-2xl">
-        {currentAvatar}
-      </div>
-    );
-  };
+  const renderHeaderAvatar = () => (
+    <PlayerAvatar avatar={currentAvatar} name={username} className="h-12 w-12 md:h-14 md:w-14 text-xl md:text-2xl" />
+  );
 
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
